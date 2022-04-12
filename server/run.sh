@@ -4,7 +4,7 @@ make clean
 
 make
 
-ls -al
+# ls -al
 
 ./server
 
