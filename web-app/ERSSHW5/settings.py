@@ -79,7 +79,7 @@ DATABASES = {
         'NAME': 'mini_amazon',         # 数据库名，Django不会帮你创建，需要自己进入数据库创建。
         'USER': 'postgres',     # 设置的数据库用户名
         'PASSWORD': 'passw0rd',     # 设置的密码
-        'HOST': 'localhost',    # 本地主机或数据库服务器的ip
+        'HOST': 'localhost',    # 本地主机或数据库服务器的ip //db 用 docker跑
         'PORT': '5432',         # 数据库使用的端口
     }
 }
