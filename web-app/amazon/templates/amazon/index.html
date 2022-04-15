@@ -5,8 +5,12 @@
 
 <body>
     <form action="/amazon/index" method="post">
+        {% csrf_token %}
         <p>
-            Product Delivery Address: <input type="text" name="Address">
+            Product Address X : <input type="text" name="AddressX">
+        </p>
+        <p>
+            Product Address Y : <input type="text" name="AddressY">
         </p>
 
         <p>
