@@ -20,6 +20,6 @@ int serverAcceptConnection(int serverFd, string & clientIp);
 int clientRequestConnection(const string & hostName, const string & portNum);
 int getPortNum(int socketFd);
 void sendMsg(int socket_fd, const void * buf, int len);
-string recvMsg(int socket_fd, int & len);
+string recvMsg(int socket_fd);
 
 #endif

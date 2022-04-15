@@ -160,7 +160,7 @@ void Server::acceptOrderRequest() {
 void Server::handleOrderRequest(string requestMsg) {
   cout << "successfully receive order request.\n";
   cout << requestMsg.c_str() << endl;
-  //Order o(requestMsg);
+  Order o(requestMsg);
 }
 
 /* ------------------------ "DB related functions" ------------------------ */
