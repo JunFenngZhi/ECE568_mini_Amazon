@@ -13,6 +13,7 @@
 #include "./protobuf/world_amazon.pb.h"
 #include "Warehouse.h"
 #include "exception.h"
+#include "Order.h"
 
 using namespace std;
 using namespace pqxx;
@@ -37,6 +38,7 @@ class Server {
   void initializeWorld();
   void getWorldIDFromUPS();
   void handleOrderRequest(string requestMsg);
+  int selectWareHouse(const Order& order);
 
  public:
   Server();

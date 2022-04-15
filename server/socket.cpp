@@ -1,5 +1,7 @@
 #include "socket.h"
 
+#include <vector>
+
 #include "exception.h"
 
 /*
@@ -141,15 +143,20 @@ void sendMsg(int socket_fd, const void * buf, int len) {
 }
 
 /*
-  receive msg from the given socket. If it fails, it will throw exception
-  and close socket.
+  receive msg from the given socket. Function will return received message directly.
+  If it fails, it will throw exception and close socket.
 */
-void recvMsg(int socket_fd, void * buf, int & len) {
-  len = recv(socket_fd, buf, len, 0);
+string recvMsg(int socket_fd) {
+  vector<char> buffer(MAX_LENGTH, 0);
+
+  int len = recv(socket_fd, &(buffer.data()[0]), MAX_LENGTH, 0);
   if (len <= 0) {
     close(socket_fd);
     std::cerr << "len: " << len << endl;
     std::cerr << "errno: " << errno << endl;
     throw MyException("fail to accept msg.");
   }
+
+  string msg(buffer.data(), len);
+  return msg;
 }
