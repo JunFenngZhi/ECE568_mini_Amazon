@@ -8,6 +8,7 @@
 #include <pqxx/pqxx>
 #include <string>
 #include <vector>
+#include <thread>
 
 #include "./protobuf/world_amazon.pb.h"
 #include "Warehouse.h"
@@ -34,6 +35,8 @@ class Server {
   void disConnectDB(connection * C);
   void acceptOrderRequest();
   void initializeWorld();
+  void getWorldIDFromUPS();
+  void handleOrderRequest(string requestMsg);
 
  public:
   Server();

@@ -1,6 +1,9 @@
 #ifndef _WAREHOUSE_H
 #define _WAREHOUSE_H
 
+#include<iostream>
+using namespace std;
+
 class Warehouse {
  private:
   int x;
@@ -13,6 +16,9 @@ class Warehouse {
   int getX() { return x; }
   int getY() { return y; }
   int getID() { return id; }
+  void show(){
+    cout<<"warehouse id: "<<id<<" loc_x: "<<x<<" loc_y: "<<y<<endl;
+  }
 };
 
 #endif
