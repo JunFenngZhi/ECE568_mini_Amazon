@@ -1,7 +1,5 @@
 #include "Server.h"
 
-#include <errno.h>
-
 #include "protobufCommunication.hpp"
 #include "socket.h"
 #include "sql_function.h"
@@ -11,17 +9,22 @@ const int MAX_LENGTH = 65536;
 /* ------------------------ "server initialize functions" ------------------------ */
 Server::Server() {
   cout << "initialize server configuration...." << endl;
-  worldID = 3;
   n_warehouse = 9;  // should be an odd number for symetric
   wh_distance = 20;
   webPortNum = "8888";
   worldHostName = "vcm-25941.vm.duke.edu";
   worldPortNum = "12345";
+  upsHostName = "0.0.0.0";
+  upsPortNum = "8888";
+
+  //used in development
+  worldID = 3;
 }
 
 /* ------------------------ "server runtime functions" ------------------------ */
 void Server::run() {
   try {
+    //getWorldIDFromUPS();
     initializeWorld();
     acceptOrderRequest();
   }
@@ -29,6 +32,22 @@ void Server::run() {
     std::cerr << e.what() << '\n';
     return;
   }
+}
+
+/*
+  Connect to UPS to get worldID. 
+*/
+void Server::getWorldIDFromUPS() {
+  int ups_fd = clientRequestConnection(upsHostName, upsPortNum);
+
+  int len = MAX_LENGTH;
+  vector<char> buffer(len, 0);
+  recvMsg(ups_fd, &(buffer.data()[0]), len);
+  string msg(buffer.data(), len);
+
+  worldID = stoi(msg);
+  cout << "get worldID = " << worldID << " from UPS.\n";
+  close(ups_fd);
 }
 
 /*
@@ -72,6 +91,11 @@ void Server::initializeWorld() {
   }
   ac.set_isamazon(true);
 
+  //show warehouses
+  for (auto & w : whList) {
+    w.show();
+  }
+
   //send AConnect command
   unique_ptr<socket_out> out(new socket_out(world_fd));
   if (sendMesgTo<AConnect>(ac, out.get()) == false) {
@@ -98,7 +122,7 @@ void Server::initializeWorld() {
 /*
   IO function. Server keep receiving order requests from front-end web.
   It will throw exception when server_socket create unsuccessfully. For each 
-  order request, send it to Request queue for processing.
+  order request, send it to task queue for processing.
 */
 void Server::acceptOrderRequest() {
   // create server socket, listen to port.
@@ -120,15 +144,31 @@ void Server::acceptOrderRequest() {
     // receive request.
     int len = MAX_LENGTH;
     vector<char> buffer(len, 0);
-    recvMsg(client_fd, &(buffer.data()[0]), len);
-    string orderRequest(buffer.data(), len);
+    try {
+      recvMsg(client_fd, &(buffer.data()[0]), len);
+    }
+    catch (const std::exception & e) {
+      std::cerr << e.what() << '\n';
+      continue;
+    }
+    string msg(buffer.data(), len);
     send(client_fd, "ACK", 4, 0);
-    cout << "successfully receive order request.\n";
-    cout << orderRequest.c_str() << endl;
-
-    // TODO: put request into queue.
     close(client_fd);
+
+    // TODO: put request into task queue, using thread pool
+    thread t(&Server::handleOrderRequest, this, msg);
+    t.detach();
   }
+}
+
+/*
+  handle order request from front-end web. function will connect to 
+  world and ups server. It will achieve no-throw guarantee.
+*/
+void Server::handleOrderRequest(string requestMsg) {
+  cout << "successfully receive order request.\n";
+  cout << requestMsg.c_str() << endl;
+  //Order o(requestMsg);
 }
 
 /* ------------------------ "DB related functions" ------------------------ */
