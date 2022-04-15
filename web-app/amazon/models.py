@@ -39,7 +39,7 @@ class Order(models.Model):
 
 
 class Inventory(models.Model):
-    itemID = models.IntegerField()
+    itemId = models.IntegerField()
     itemName = models.CharField(max_length=100, primary_key=True)
     itemAmount = models.IntegerField()
     whID = models.IntegerField()
