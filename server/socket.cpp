@@ -128,3 +128,28 @@ int getPortNum(int socketFd) {
   }
   return ntohs(sin.sin_port);
 }
+
+/*
+  send msg to the given socket. If it fails, it will throw exception
+  and close socket.
+*/
+void sendMsg(int socket_fd, const void * buf, int len) {
+  if (send(socket_fd, buf, len, 0) < 0) {
+    close(socket_fd);
+    throw MyException("fail to send msg.");
+  }
+}
+
+/*
+  receive msg from the given socket. If it fails, it will throw exception
+  and close socket.
+*/
+void recvMsg(int socket_fd, void * buf, int & len) {
+  len = recv(socket_fd, buf, len, 0);
+  if (len <= 0) {
+    close(socket_fd);
+    std::cerr << "len: " << len << endl;
+    std::cerr << "errno: " << errno << endl;
+    throw MyException("fail to accept msg.");
+  }
+}
