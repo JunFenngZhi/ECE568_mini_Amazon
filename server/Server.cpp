@@ -4,8 +4,6 @@
 #include "socket.h"
 #include "sql_function.h"
 
-const int MAX_LENGTH = 65536;
-
 /* ------------------------ "server initialize functions" ------------------------ */
 Server::Server() {
   cout << "initialize server configuration...." << endl;
@@ -39,11 +37,7 @@ void Server::run() {
 */
 void Server::getWorldIDFromUPS() {
   int ups_fd = clientRequestConnection(upsHostName, upsPortNum);
-
-  int len = MAX_LENGTH;
-  vector<char> buffer(len, 0);
-  recvMsg(ups_fd, &(buffer.data()[0]), len);
-  string msg(buffer.data(), len);
+  string msg = recvMsg(ups_fd);
 
   worldID = stoi(msg);
   cout << "get worldID = " << worldID << " from UPS.\n";
@@ -124,7 +118,7 @@ void Server::initializeWorld() {
   It will throw exception when server_socket create unsuccessfully. For each 
   order request, send it to task queue for processing.
 */
-void Server::acceptOrderRequest() {
+void Server::acceptOrderRequest() { 
   // create server socket, listen to port.
   int server_fd = createServerSocket(webPortNum);
 
@@ -142,18 +136,16 @@ void Server::acceptOrderRequest() {
     }
 
     // receive request.
-    int len = MAX_LENGTH;
-    vector<char> buffer(len, 0);
+    string msg;
     try {
-      recvMsg(client_fd, &(buffer.data()[0]), len);
+      msg = recvMsg(client_fd);
+      sendMsg(client_fd, "ACK", 4);
+      close(client_fd);
     }
     catch (const std::exception & e) {
       std::cerr << e.what() << '\n';
       continue;
     }
-    string msg(buffer.data(), len);
-    send(client_fd, "ACK", 4, 0);
-    close(client_fd);
 
     // TODO: put request into task queue, using thread pool
     thread t(&Server::handleOrderRequest, this, msg);
