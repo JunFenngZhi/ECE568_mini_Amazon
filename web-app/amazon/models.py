@@ -13,7 +13,7 @@ class Item(models.Model):
     price = models.FloatField(max_length=1000, blank=False, null=False)
     catalog = models.CharField(max_length=100)
     seller = models.CharField(max_length=100)
-    version = models.IntegerField()  # need default value.
+    version = models.IntegerField(default=1)  # need default value.
 
 
 class Order(models.Model):
@@ -35,7 +35,7 @@ class Order(models.Model):
     upsId = models.IntegerField()
     item = models.ForeignKey(Item, on_delete=models.SET_NULL, null=True)
     totalPrice = models.FloatField(max_length=1000)
-    version = models.IntegerField()  # need default value.
+    version = models.IntegerField(default=1)  # need default value.
 
 
 class Inventory(models.Model):
@@ -43,4 +43,4 @@ class Inventory(models.Model):
     itemName = models.CharField(max_length=100, primary_key=True)
     itemAmount = models.IntegerField()
     whID = models.IntegerField()
-    version = models.IntegerField()  # need default value.
+    version = models.IntegerField(default=1)  # need default value.
