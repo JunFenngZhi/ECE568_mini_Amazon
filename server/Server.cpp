@@ -118,7 +118,7 @@ void Server::initializeWorld() {
   It will throw exception when server_socket create unsuccessfully. For each 
   order request, send it to task queue for processing.
 */
-void Server::acceptOrderRequest() { 
+void Server::acceptOrderRequest() {
   // create server socket, listen to port.
   int server_fd = createServerSocket(webPortNum);
 
@@ -160,7 +160,34 @@ void Server::acceptOrderRequest() {
 void Server::handleOrderRequest(string requestMsg) {
   cout << "successfully receive order request.\n";
   cout << requestMsg.c_str() << endl;
-  Order o(requestMsg);
+  Order order(requestMsg);
+
+  // determine to use which warehouse.
+  int whIndex = selectWareHouse(order);
+
+  // 检查该仓库的库存情况，是否满足订单 写在sql_function.cpp中
+  
+
+  // 否，则向world下单购买
+
+  // 开始pack
+}
+
+/*
+  select a warehouse, which is closest to the order address. return the selected warehouse index.
+*/
+int Server::selectWareHouse(const Order & order) {
+  int index = -1;
+  int minDistance = INT_MAX;
+  for (int i = 0; i < whList.size(); i++) {
+    int delta_x = abs(whList[i].getX() - order.getAddressX());
+    int delta_y = abs(whList[i].getY() - order.getAddressY());
+    if ((delta_x * delta_x + delta_y * delta_y) < minDistance) {
+      minDistance = delta_x * delta_x + delta_y * delta_y;
+      index = i;
+    }
+  }
+  return index;
 }
 
 /* ------------------------ "DB related functions" ------------------------ */

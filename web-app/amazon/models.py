@@ -13,7 +13,7 @@ class Item(models.Model):
     price = models.FloatField(max_length=1000, blank=False, null=False)
     catalog = models.CharField(max_length=100)
     seller = models.CharField(max_length=100)
-    item_version_id = models.IntegerField()
+    version = models.IntegerField()  # need default value. 
 
 
 class Order(models.Model):
@@ -33,13 +33,15 @@ class Order(models.Model):
         max_length=50, choices=STATUS_CHOICES, default='packing')
     amount = models.IntegerField()
     ups_id = models.IntegerField()
-    items = models.ForeignKey(Item, on_delete=models.SET_NULL, null=True)
+    item = models.ForeignKey(Item, on_delete=models.SET_NULL, null=True)  
     total_price = models.FloatField(max_length=1000)
-    order_version_id = models.IntegerField()
+    version = models.IntegerField() # need default value.
 
 
 class Inventory(models.Model):
     item_name = models.CharField(max_length=100, primary_key=True)
     item_amount = models.IntegerField()
     warehouse_id = models.IntegerField()
-    inventory_version_id = models.IntegerField()
+    version = models.IntegerField() # need default value.
+
+
