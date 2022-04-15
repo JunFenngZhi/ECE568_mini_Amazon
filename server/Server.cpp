@@ -165,8 +165,12 @@ void Server::handleOrderRequest(string requestMsg) {
   // determine to use which warehouse.
   int whIndex = selectWareHouse(order);
 
-  // 检查该仓库的库存情况，是否满足订单 写在sql_function.cpp中
-  
+  // Check the inventory of the warehouse and whether the order is satisfied
+  // Write in sql_function.cpp
+  int itemId = order.getItemId();
+  int itemAmt = order.getAmount();
+  // Connection ?
+  bool ifEnough = checkInventory(C, itemId, itemAmt,whIndex);
 
   // 否，则向world下单购买
 
