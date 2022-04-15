@@ -16,5 +16,8 @@ int createServerSocket(const string & portNum);
 int serverAcceptConnection(int serverFd, string & clientIp);
 int clientRequestConnection(const string & hostName, const string & portNum);
 int getPortNum(int socketFd);
+void sendMsg(int socket_fd, const void * buf, int len);
+void recvMsg(int socket_fd, void * buf, int & len);
+
 
 #endif
