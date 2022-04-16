@@ -4,7 +4,7 @@ from django.utils.timezone import now
 
 # Create your models here.
 
-
+ # 将itemId和seller做成复合主键？
 class Item(models.Model):
     itemId = models.IntegerField(primary_key=True)
     name = models.CharField(max_length=100)
