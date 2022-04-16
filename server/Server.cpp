@@ -7,6 +7,7 @@
 /* ------------------------ "server initialize functions" ------------------------ */
 Server::Server() {
   cout << "initialize server configuration...." << endl;
+  curSeqNum = 0;
   n_warehouse = 9;  // should be an odd number for symetric
   wh_distance = 20;
   webPortNum = "8888";
@@ -274,6 +275,12 @@ void Server::keepReceivingMsg() {
     }
 
     if (FD_ISSET(ups_fd, &read_fds)) {
+      AUResponse r;
+      if (recvMesgFrom<AUResponse>(r, ups_in.get()) == false) {
+        throw MyException("fail to recv AUResponse from ups.");
+      }
+      // AUResponseHandler h(r);
+      
     }
   }
 }
@@ -283,4 +290,15 @@ void Server::keepReceivingMsg() {
   empty, and then will be waked up by conditional variable to send message.
 */
 void Server::keepSendingMsg() {
+  
+  // while(1){
+  //   unique_lock<std::mutex> lck(IO_lck);
+  //   while(worldQueue.empty() && upsQueue.empty()){
+  //     IO_cv.wait(lck);
+  //   }
+  //   // get data to be sent
+  //   lck.unlock();
+      
+  // }
+
 }
