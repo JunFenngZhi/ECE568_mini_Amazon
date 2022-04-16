@@ -169,10 +169,10 @@ void Server::handleOrderRequest(string requestMsg) {
   // Write in sql_function.cpp
   int itemId = order.getItemId();
   int itemAmt = order.getAmount();
-  // Connection ?
-  bool ifEnough = checkInventory(C, itemId, itemAmt,whIndex);
+  // bool ifEnough = checkInventory(C, itemId, itemAmt,whIndex);
 
   // 否，则向world下单购买
+
   
 
   // 开始pack

@@ -46,7 +46,6 @@ bool checkInventory(connection * C, int itemId, int itemAmount, int whID){
     //create nontransaction object for SELECT operation
     nontransaction N(*C);
 
-    
     // create sql statement, we need to select item amount from inventory table
     stringstream sql;  
     sql << "SELECT ITEMAMOUNT FROM INVENTORY WHERE "

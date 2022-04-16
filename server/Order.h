@@ -20,12 +20,12 @@ class Order {
   Order() {}
   Order(const string& str);
   ~Order() {}
-  int getAddressX() { return address_x; }
-  int getAddressY() { return address_y; }
-  int getAmount() { return amount; }
-  int getItemId() {return item_id;}
-  float getItemPrice() {return item_price;}
-  int getUPSId() {return UPS_ID;}
+  int getAddressX() const { return address_x; }
+  int getAddressY() const { return address_y; }
+  int getAmount() const { return amount; }
+  int getItemId() const {return item_id;}
+  float getItemPrice() const {return item_price;}
+  int getUPSId() const {return UPS_ID;}
 
 };
 
