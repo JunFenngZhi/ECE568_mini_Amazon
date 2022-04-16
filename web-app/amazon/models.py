@@ -1,12 +1,15 @@
+from enum import unique
 from gettext import Catalog
 from django.db import models
 from django.utils.timezone import now
 
 # Create your models here.
 
- # 将itemId和seller做成复合主键？
+# 将itemId和seller做成复合主键？
+
+
 class Item(models.Model):
-    itemId = models.IntegerField(primary_key=True)
+    itemId = models.IntegerField()
     name = models.CharField(max_length=100)
     description = models.CharField(
         max_length=100, blank=False, null=False, unique=True)
@@ -14,6 +17,9 @@ class Item(models.Model):
     catalog = models.CharField(max_length=100)
     seller = models.CharField(max_length=100)
     version = models.IntegerField(default=1)  # need default value.
+
+    class Meta:
+        unique_together = ("itemId", "seller")
 
 
 class Order(models.Model):

@@ -42,13 +42,13 @@ void dropAllTable(connection* C) {
     Check the order item amount in the inventory table, return boolean
     True means: enough inventory, False means: not enough inventory
 */
-bool checkInventory(connection * C, int itemId, int itemAmount, int whID){
+bool checkInventory(connection * C, int itemId, int itemAmount, int whID, int & version){
     //create nontransaction object for SELECT operation
     nontransaction N(*C);
 
     // create sql statement, we need to select item amount from inventory table
     stringstream sql;  
-    sql << "SELECT ITEMAMOUNT FROM INVENTORY WHERE "
+    sql << "SELECT ITEMAMOUNT, VERSION FROM INVENTORY WHERE "
             "ITEMID= " << itemId << "AND WHID= " << whID <<";";
 
     // execute sql statement and get the result set    
@@ -56,6 +56,8 @@ bool checkInventory(connection * C, int itemId, int itemAmount, int whID){
 
     // we need to get inventory item amount from result R
     int inventoryAmt = InventoryRes[0][0].as<int>();
+    // get the version from the table and change it
+    version = InventoryRes[0][1].as<int>();
 
     // we compare inventory amt and item amount 
     if(inventoryAmt >= itemAmount){

@@ -12,6 +12,6 @@ using namespace std;
 
 void createTable(connection* C, const string fileName);
 void dropAllTable(connection* C);
-bool checkInventory(connection* C, int itemId, int itemAmount, int whID);
+bool checkInventory(connection* C, int itemId, int itemAmount, int whID, int& version);
 
 #endif

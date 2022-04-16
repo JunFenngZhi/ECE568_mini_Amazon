@@ -157,26 +157,28 @@ void Server::acceptOrderRequest() {
   handle order request from front-end web. function will connect to 
   world and ups server. It will achieve no-throw guarantee.
 */
-void Server::handleOrderRequest(string requestMsg) {
-  cout << "successfully receive order request.\n";
-  cout << requestMsg.c_str() << endl;
-  Order order(requestMsg);
+// void Server::handleOrderRequest(string requestMsg) {
+//   cout << "successfully receive order request.\n";
+//   cout << requestMsg.c_str() << endl;
+//   Order order(requestMsg);
 
-  // determine to use which warehouse.
-  int whIndex = selectWareHouse(order);
+//   // determine to use which warehouse.
+//   int whIndex = selectWareHouse(order);
 
-  // Check the inventory of the warehouse and whether the order is satisfied
-  // Write in sql_function.cpp
-  int itemId = order.getItemId();
-  int itemAmt = order.getAmount();
-  // bool ifEnough = checkInventory(C, itemId, itemAmt,whIndex);
-
-  // 否，则向world下单购买
+//   // Check the inventory of the warehouse and whether the order is satisfied
+//   // Write in sql_function.cpp
+//   int itemId = order.getItemId();
+//   int itemAmt = order.getAmount();
+//   // We will pass version to checkInventory, pass 0 to this function
+//   int version = 0;
+//   bool ifEnough = checkInventory(C, itemId, itemAmt,whIndex, version);
+  
+//   // 否，则向world下单购买
 
   
 
-  // 开始pack
-}
+//   // 开始pack
+// }
 
 /*
   select a warehouse, which is closest to the order address. return the selected warehouse index.
