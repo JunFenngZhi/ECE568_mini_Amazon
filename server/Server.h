@@ -9,15 +9,21 @@
 #include <string>
 #include <vector>
 #include <thread>
+#include <mutex>
+#include <condition_variable>
 
 #include "./protobuf/world_amazon.pb.h"
+#include "./protobuf/AUprotocolV3.pb.h"
 #include "Warehouse.h"
 #include "exception.h"
 #include "Order.h"
 #include "AResponseHandler.h"
+#include "ThreadSafe_queue.h"
 
 using namespace std;
 using namespace pqxx;
+
+const int MAX_SEQNUM = 65536;
 
 class Server {
  private:
@@ -32,6 +38,12 @@ class Server {
   vector<Warehouse> whList;  // list of warehouse
   int ups_fd;
   int world_fd;
+  vector<bool> seqNumTable; // mark whether seqNum is acked.
+  size_t curSeqNum;         // the sequence number to be used next(add in send thread)
+  ThreadSafe_queue<ACommands> worldQueue; // store the ACommands objects that need to be sent to the World.
+  ThreadSafe_queue<AUCommand> upsQueue; // store the AUCommand objects that need to be sent to the UPS.
+  // mutex IO_lck;
+  // condition_variable IO_cv;
 
  private:
   connection * connectDB(string dbName, string userName, string W);
