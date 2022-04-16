@@ -36,3 +36,33 @@ void dropAllTable(connection* C) {
     W.commit();
     cout << "Drop all the existed table..." << endl;
 }
+
+
+/*
+    Check the order item amount in the inventory table, return boolean
+    True means: enough inventory, False means: not enough inventory
+*/
+bool checkInventory(connection * C, int itemId, int itemAmount, int whID){
+    //create nontransaction object for SELECT operation
+    nontransaction N(*C);
+
+    
+    // create sql statement, we need to select item amount from inventory table
+    stringstream sql;  
+    sql << "SELECT ITEMAMOUNT FROM INVENTORY WHERE "
+            "ITEMID= " << itemId << "AND WHID= " << whID <<";";
+
+    // execute sql statement and get the result set    
+    result InventoryRes( N.exec(sql.str()));
+
+    // we need to get inventory item amount from result R
+    int inventoryAmt = InventoryRes[0][0].as<int>();
+
+    // we compare inventory amt and item amount 
+    if(inventoryAmt >= itemAmount){
+        return true;
+    } else{
+        return false;
+    }
+    
+}
