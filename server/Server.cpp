@@ -20,14 +20,22 @@ Server::Server() {
 }
 
 /* ------------------------ "server runtime functions" ------------------------ */
+/*
+  Initialize the connection to server and ups and get essential infomation. Then it 
+  will keep listening the front-end web to receive order request.
+*/
 void Server::run() {
   try {
     //getWorldIDFromUPS();
     initializeWorld();
+    thread t_I(&Server::keepReceivingMsg, this);
+    thread t_O(&Server::keepSendingMsg, this);
     acceptOrderRequest();
   }
   catch (const std::exception & e) {
     std::cerr << e.what() << '\n';
+    close(ups_fd);
+    close(world_fd);
     return;
   }
 }
@@ -36,12 +44,11 @@ void Server::run() {
   Connect to UPS to get worldID. 
 */
 void Server::getWorldIDFromUPS() {
-  int ups_fd = clientRequestConnection(upsHostName, upsPortNum);
+  ups_fd = clientRequestConnection(upsHostName, upsPortNum);
   string msg = recvMsg(ups_fd);
 
   worldID = stoi(msg);
   cout << "get worldID = " << worldID << " from UPS.\n";
-  close(ups_fd);
 }
 
 /*
@@ -53,7 +60,7 @@ void Server::initializeWorld() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   //connect to world
-  int world_fd = clientRequestConnection(worldHostName, worldPortNum);
+  world_fd = clientRequestConnection(worldHostName, worldPortNum);
 
   //set AConnect command
   AConnect ac;
@@ -105,12 +112,10 @@ void Server::initializeWorld() {
 
   //check AConnected command
   if (aced.result() != "connected!") {
-    close(world_fd);
     throw MyException("fail to initialize the world.");
   }
   worldID = aced.worldid();
   cout << "succefully connect to world and initialize warehouses.\n";
-  close(world_fd);
 }
 
 /*
@@ -156,29 +161,28 @@ void Server::acceptOrderRequest() {
 /*
   handle order request from front-end web. function will connect to 
   world and ups server. It will achieve no-throw guarantee.
+
+void Server::handleOrderRequest(string requestMsg) {
+  cout << "successfully receive order request.\n";
+  cout << requestMsg.c_str() << endl;
+  Order order(requestMsg);
+
+  // determine to use which warehouse.
+  int whIndex = selectWareHouse(order);
+
+  // Check the inventory of the warehouse and whether the order is satisfied
+  // Write in sql_function.cpp
+  int itemId = order.getItemId();
+  int itemAmt = order.getAmount();
+  // bool ifEnough = checkInventory(C, itemId, itemAmt,whIndex);
+
+  // 否，则向world下单购买
+
+  
+
+  // 开始pack
+}
 */
-// void Server::handleOrderRequest(string requestMsg) {
-//   cout << "successfully receive order request.\n";
-//   cout << requestMsg.c_str() << endl;
-//   Order order(requestMsg);
-
-//   // determine to use which warehouse.
-//   int whIndex = selectWareHouse(order);
-
-//   // Check the inventory of the warehouse and whether the order is satisfied
-//   // Write in sql_function.cpp
-//   int itemId = order.getItemId();
-//   int itemAmt = order.getAmount();
-//   // We will pass version to checkInventory, pass 0 to this function
-//   int version = 0;
-//   bool ifEnough = checkInventory(C, itemId, itemAmt,whIndex, version);
-  
-//   // 否，则向world下单购买
-
-  
-
-//   // 开始pack
-// }
 
 /*
   select a warehouse, which is closest to the order address. return the selected warehouse index.
@@ -232,4 +236,51 @@ void Server::initializeDB(connection * C) {
 */
 void Server::disConnectDB(connection * C) {
   C->disconnect();
+}
+
+/* ------------------------ "IO Functions" ------------------------ */
+/*
+  using select() function to keep receiving message from world and ups.
+*/
+void Server::keepReceivingMsg() {
+  unique_ptr<socket_in> world_in(new socket_in(world_fd));
+  unique_ptr<socket_in> ups_in(new socket_in(ups_fd));
+
+  vector<int> allSockets = {ups_fd, world_fd};
+  int maxFd = *max_element(allSockets.begin(), allSockets.end());
+
+  fd_set allFds;
+  fd_set read_fds;  // only need to monitor reading events
+  FD_ZERO(&allFds);
+  FD_ZERO(&read_fds);
+  for (auto fd : allSockets) {
+    FD_SET(fd, &allFds);
+  }
+
+  while (1) {
+    read_fds = allFds;  // reset read_fds
+
+    int ret = select(maxFd + 1, &read_fds, NULL, NULL, NULL);
+    if (ret < 0) {
+      throw MyException("Fail to select!\n");
+    }
+
+    if (FD_ISSET(world_fd, &read_fds)) {
+      AResponses r;
+      if (recvMesgFrom<AResponses>(r, world_in.get()) == false) {
+        throw MyException("fail to recv AResponses from world.");
+      }
+      AResponseHandler h(r);
+    }
+
+    if (FD_ISSET(ups_fd, &read_fds)) {
+    }
+  }
+}
+
+/*
+  send message in queue to world or ups. This function will block when queue is 
+  empty, and then will be waked up by conditional variable to send message.
+*/
+void Server::keepSendingMsg() {
 }

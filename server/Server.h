@@ -14,6 +14,7 @@
 #include "Warehouse.h"
 #include "exception.h"
 #include "Order.h"
+#include "AResponseHandler.h"
 
 using namespace std;
 using namespace pqxx;
@@ -29,6 +30,8 @@ class Server {
   int n_warehouse;           // number of warehouse
   int wh_distance;           // distance between neighbour warehouse
   vector<Warehouse> whList;  // list of warehouse
+  int ups_fd;
+  int world_fd;
 
  private:
   connection * connectDB(string dbName, string userName, string W);
@@ -39,6 +42,11 @@ class Server {
   void getWorldIDFromUPS();
   void handleOrderRequest(string requestMsg);
   int selectWareHouse(const Order& order);
+  void keepReceivingMsg();
+  void keepSendingMsg();
+
+  private:
+   friend class AResponseHandler;
 
  public:
   Server();
