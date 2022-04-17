@@ -12,4 +12,7 @@ class AResponseHandler {
   AResponseHandler(const AResponses & r);
   ~AResponseHandler() {}
   void handle();
+
+ private:
+ bool checkExecutedAndRecordIt(int seqNum);
 };
