@@ -250,6 +250,7 @@ void Server::keepReceivingMsg() {
   vector<int> allSockets = {ups_fd, world_fd};
   int maxFd = *max_element(allSockets.begin(), allSockets.end());
 
+  //set fd_set
   fd_set allFds;
   fd_set read_fds;  // only need to monitor reading events
   FD_ZERO(&allFds);
@@ -258,6 +259,7 @@ void Server::keepReceivingMsg() {
     FD_SET(fd, &allFds);
   }
 
+  //keep listening
   while (1) {
     read_fds = allFds;  // reset read_fds
 
@@ -271,7 +273,6 @@ void Server::keepReceivingMsg() {
       if (recvMesgFrom<AResponses>(r, world_in.get()) == false) {
         throw MyException("fail to recv AResponses from world.");
       }
-
       AResponseHandler h(r);
       h.handle();
     }
@@ -288,19 +289,8 @@ void Server::keepReceivingMsg() {
 }
 
 /*
-  send message in queue to world or ups. This function will block when queue is 
-  empty, and then will be waked up by conditional variable to send message.
+  keep sending message from queue to the given socket. this function will block when
+  the queue is empty.
 */
 void Server::keepSendingMsg() {
-  
-  // while(1){
-  //   unique_lock<std::mutex> lck(IO_lck);
-  //   while(worldQueue.empty() && upsQueue.empty()){
-  //     IO_cv.wait(lck);
-  //   }
-  //   // get data to be sent
-  //   lck.unlock();
-      
-  // }
-
 }
