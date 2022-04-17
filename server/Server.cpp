@@ -271,7 +271,9 @@ void Server::keepReceivingMsg() {
       if (recvMesgFrom<AResponses>(r, world_in.get()) == false) {
         throw MyException("fail to recv AResponses from world.");
       }
-      AResponseHandler h(r);
+
+      //我们是否需要参数worldfd？（Handler在给world发送#seq可能需要？）
+      AResponseHandler h(r, world_fd);
     }
 
     if (FD_ISSET(ups_fd, &read_fds)) {
