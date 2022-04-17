@@ -9,7 +9,7 @@ from django.utils.timezone import now
 
 
 class Item(models.Model):
-    itemId = models.IntegerField()
+    itemId = models.IntegerField(primary_key=True)
     name = models.CharField(max_length=100)
     description = models.CharField(
         max_length=100, blank=False, null=False, unique=True)
@@ -17,9 +17,6 @@ class Item(models.Model):
     catalog = models.CharField(max_length=100)
     seller = models.CharField(max_length=100)
     version = models.IntegerField(default=1)  # need default value.
-
-    class Meta:
-        unique_together = ("itemId", "seller")
 
 
 class Order(models.Model):
@@ -39,14 +36,16 @@ class Order(models.Model):
         max_length=50, choices=STATUS_CHOICES, default='packing')
     amount = models.IntegerField()
     upsId = models.IntegerField()
-    item = models.ForeignKey(Item, on_delete=models.SET_NULL, null=True)
+    itemId = models.ForeignKey(Item, on_delete=models.SET_NULL, null=True)
     totalPrice = models.FloatField(max_length=1000)
     version = models.IntegerField(default=1)  # need default value.
 
 
 class Inventory(models.Model):
-    itemId = models.IntegerField()
-    itemName = models.CharField(max_length=100, primary_key=True)
+    itemId = models.ForeignKey(Item, on_delete=models.SET_NULL, null=True)
     itemAmount = models.IntegerField()
     whID = models.IntegerField()
     version = models.IntegerField(default=1)  # need default value.
+
+    class Meta:
+        unique_together = ["itemId", "whID"]

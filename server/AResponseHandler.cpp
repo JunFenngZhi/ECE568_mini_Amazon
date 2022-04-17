@@ -2,6 +2,7 @@
  #include "OrderProcess.h"
 
 
+
  AResponseHandler::AResponseHandler(const AResponses& r) {
      for(int i =0; i < r.arrived_size(); i++) {
         apurchasemores.push_back(std::move(r.arrived(i)));

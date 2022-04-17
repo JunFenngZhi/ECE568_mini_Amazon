@@ -67,3 +67,50 @@ bool checkInventory(connection * C, int itemId, int itemAmount, int whID, int & 
     }
     
 }
+
+
+void saveOrderInDB(connection* C, const Order* order) {
+
+
+
+}
+
+
+/*
+    add inventory of the product in the warehouse and update the version id of the inventory
+*/
+void addInventory(connection * C, int whID, int count, int productId) {
+    work W(*C);
+    stringstream sql;
+
+    sql << "UPDATE INVENTORY set ITEMAMOUNT = INVENTORY.ITEMAMOUNT+" << count << 
+    ", VERSION = INVENTORY.VERSION+1" << " WHERE ITEMID= " << productId << "AND WHID= " << whID <<";";
+
+    W.exec(sql.str());
+    W.commit();    
+}
+
+
+/**
+ * @brief update specific order status to be 'packed'
+ * 
+ */
+void updatePacked(connection * C, int packageId) {
+    // work W(*C);
+    // stringstream sql;
+    // sql << "UPDATE ORDER set STATUS= " << W.quote("packed") << "WHERE PACKID= " << packageId << 
+
+
+}
+
+
+void decreaseInventory(connection * C, int whID, int count, int productId, int version) {
+    work W(*C);
+    stringstream sql;
+
+    sql << "UPDATE INVENTORY set ITEMAMOUNT = INVENTORY.ITEMAMOUNT+" << count << 
+    ", VERSION = INVENTORY.VERSION+1" << " WHERE ITEMID= " << productId << " AND WHID= " << whID << " AND VERSION= "<< version << ";";
+
+    W.exec(sql);
+    W.commit();
+}
