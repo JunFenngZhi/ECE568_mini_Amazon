@@ -38,7 +38,7 @@ class Server {
   vector<Warehouse> whList;  // list of warehouse
   int ups_fd;
   int world_fd;
-  vector<bool> seqNumTable; // mark whether seqNum from amazon is acked.
+  static vector<bool> seqNumTable; // mark whether seqNum from amazon is acked.
   size_t curSeqNum;         // the sequence number to be used next(add in send thread)
   unordered_set<int> executeTable; // mark whether specific response has been executed
   ThreadSafe_queue<ACommands> worldQueue; // store the ACommands objects that need to be sent to the World.
