@@ -59,10 +59,22 @@ class Server {
   void handleOrderRequest(string requestMsg);
   int selectWareHouse(const Order & order);
   void keepReceivingMsg();
-  void keepSendingMsg();
 
- private:
-  friend class AResponseHandler;
+  /*
+  keep sending message from queue to the given socket. this function will block when
+  the queue is empty.
+  */
+  template<typename T>
+  void keepSendingMsg(int fd, ThreadSafe_queue<T> & queue) {
+    unique_ptr<socket_out> out(new socket_out(fd));
+    while (1) {
+      T msg;
+      queue.wait_and_pop(msg);
+      if (sendMesgTo(msg, out.get()) == false) {
+        throw MyException("fail to send message in IO thread.");
+      }
+    }
+  }
 
  public:  //如果使用线程池，放回private
   static connection * connectDB(string dbName, string userName, string W);
@@ -76,5 +88,3 @@ class Server {
 };
 
 #endif
-
-//TODO: 部分成员变量改为static?

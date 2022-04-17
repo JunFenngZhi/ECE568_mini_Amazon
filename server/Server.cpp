@@ -30,7 +30,8 @@ void Server::run() {
     //getWorldIDFromUPS();
     initializeWorld();
     thread t_I(&Server::keepReceivingMsg, this);
-    thread t_O(&Server::keepSendingMsg, this);
+    thread t_O(&Server::keepSendingMsg<ACommands>, this, world_fd, worldQueue);
+    thread t_O(&Server::keepSendingMsg<AUCommand>, this, ups_fd, upsQueue);
     acceptOrderRequest();
   }
   catch (const std::exception & e) {
@@ -162,7 +163,7 @@ void Server::acceptOrderRequest() {
 /*
   handle order request from front-end web. function will connect to 
   world and ups server. It will achieve no-throw guarantee.
-
+*/
 void Server::handleOrderRequest(string requestMsg) {
   cout << "successfully receive order request.\n";
   cout << requestMsg.c_str() << endl;
@@ -183,7 +184,7 @@ void Server::handleOrderRequest(string requestMsg) {
 
   // 开始pack
 }
-*/
+
 
 /*
   select a warehouse, which is closest to the order address. return the selected warehouse index.
@@ -288,9 +289,3 @@ void Server::keepReceivingMsg() {
   }
 }
 
-/*
-  keep sending message from queue to the given socket. this function will block when
-  the queue is empty.
-*/
-void Server::keepSendingMsg() {
-}
