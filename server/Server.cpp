@@ -8,6 +8,9 @@
 Server::Server() {
   cout << "initialize server configuration...." << endl;
   curSeqNum = 0;
+  for (size_t i = 0; i < MAX_SEQNUM; i++) {
+    seqNumTable.push_back(false);
+  }
   n_warehouse = 9;  // should be an odd number for symetric
   wh_distance = 20;
   webPortNum = "8888";
@@ -30,7 +33,8 @@ void Server::run() {
     //getWorldIDFromUPS();
     initializeWorld();
     thread t_I(&Server::keepReceivingMsg, this);
-    thread t_O(&Server::keepSendingMsg, this);
+    thread t_O(&Server::keepSendingMsgToWorld, this);
+    thread t_O(&Server::keepSendingMsgToUps, this);
     acceptOrderRequest();
   }
   catch (const std::exception & e) {
@@ -160,30 +164,51 @@ void Server::acceptOrderRequest() {
 }
 
 /*
-  handle order request from front-end web. function will connect to 
-  world and ups server. It will achieve no-throw guarantee.
-
+  Analyze order from front-end web, save it to database. Then function will 
+  determine which warehouse to use and check its inventory. If inventory is enough,
+  it will begin process it, else it will wait for the incoming inventory.
+*/
 void Server::handleOrderRequest(string requestMsg) {
   cout << "successfully receive order request.\n";
-  cout << requestMsg.c_str() << endl;
   Order order(requestMsg);
+  connection * C = connectDB("mini_amazon", "postgres", "passw0rd");
+
+  //save it to database
+  saveOrderInDB(connection* C, const Order* order);
 
   // determine to use which warehouse.
   int whIndex = selectWareHouse(order);
 
-  // Check the inventory of the warehouse and whether the order is satisfied
-  // Write in sql_function.cpp
-  int itemId = order.getItemId();
-  int itemAmt = order.getAmount();
-  // bool ifEnough = checkInventory(C, itemId, itemAmt,whIndex);
-
-  // 否，则向world下单购买
-
-  
-
-  // 开始pack
+  // Check the inventory of warehouse
+  while (1) {
+    try {
+      int itemId = order.getItemId();
+      int itemAmt = order.getAmount();
+      int version = -1;
+      bool isEnough = checkInventory(C, itemId, itemAmt, whIndex, version);
+      if (isEnough == true) {
+        decreaseInventory(C, whIndex, -1 * itemAmt, itemID, version);
+        //create new thread to begin packing and order a truck
+        disConnectDB(C);
+        return;
+      }
+      else {
+        ACommands ac;
+        APurchaseMore * ap = ac.add_buy();
+        ap->set_whnum(whIndex);
+        AProduct * aproduct = ap->add_things();
+        aproduct->set_id(itemId);
+        aproduct->set_count(10 * itemAmt);
+        aproduct->set_description(getDesricption(C, itemId));
+        worldQueue.push(ac);
+        this_thread::sleep_for(std::chrono::milliseconds(1000));
+      }
+    }
+    catch (const std::VersionErrorException & e) {
+      std::cerr << e.what() << '\n';
+    }
+  }
 }
-*/
 
 /*
   select a warehouse, which is closest to the order address. return the selected warehouse index.
@@ -283,14 +308,77 @@ void Server::keepReceivingMsg() {
         throw MyException("fail to recv AUResponse from ups.");
       }
       // AUResponseHandler h(r);
-      
     }
   }
 }
 
 /*
-  keep sending message from queue to the given socket. this function will block when
-  the queue is empty.
+  keep sending message from worldQueue to world. this function will block when
+  the queue is empty. 
 */
-void Server::keepSendingMsg() {
+void Server::keepSendingMsgToWorld() {
+  unique_ptr<socket_out> out(new socket_out(world_fd));
+  while (1) {
+    ACommands msg;
+    worldQueue.wait_and_pop(msg);
+
+    // add seqNum
+    for (int i = 0; i < msg.buy_size(); i++) {
+      lock_guard<mutex> lck(seqNum_lck);
+      msg.buy(i).set_seqnum(curSeqNum % MAX_SEQNUM);
+      curSeqNum++;
+    }
+    for (int i = 0; i < msg.topack_size(); i++) {
+      lock_guard<mutex> lck(seqNum_lck);
+      msg.topack(i).set_seqnum(curSeqNum % MAX_SEQNUM);
+      curSeqNum++;
+    }
+    for (int i = 0; i < msg.load_size(); i++) {
+      lock_guard<mutex> lck(seqNum_lck);
+      msg.load(i).set_seqnum(curSeqNum % MAX_SEQNUM);
+      curSeqNum++;
+    }
+    for (int i = 0; i < msg.queries_size(); i++) {
+      lock_guard<mutex> lck(seqNum_lck);
+      msg.queries(i).set_seqnum(curSeqNum % MAX_SEQNUM);
+      curSeqNum++;
+    }
+
+    if (sendMesgTo(msg, out.get()) == false) {
+      throw MyException("fail to send message in world.");
+    }
+  }
+}
+
+/*
+  keep sending message from upsQueue to UPS. this function will block when
+  the queue is empty. 
+*/
+void keepSendingMsgToUps() {
+  unique_ptr<socket_out> out(new socket_out(ups_fd));
+  while (1) {
+    AUCommand msg;
+    upsQueue.wait_and_pop(msg);
+
+    // add seqNum
+    for (int i = 0; i < msg.deliver_size(); i++) {
+      lock_guard<mutex> lck(seqNum_lck);
+      msg.deliver(i).set_seqnum(curSeqNum % MAX_SEQNUM);
+      curSeqNum++;
+    }
+    for (int i = 0; i < msg.order_size(); i++) {
+      lock_guard<mutex> lck(seqNum_lck);
+      msg.order(i).set_seqnum(curSeqNum % MAX_SEQNUM);
+      curSeqNum++;
+    }
+    for (int i = 0; i < msg.error_size(); i++) {
+      lock_guard<mutex> lck(seqNum_lck);
+      msg.error(i).set_seqnum(curSeqNum % MAX_SEQNUM);
+      curSeqNum++;
+    }
+
+    if (sendMesgTo(msg, out.get()) == false) {
+      throw MyException("fail to send message in ups.");
+    }
+  }
 }

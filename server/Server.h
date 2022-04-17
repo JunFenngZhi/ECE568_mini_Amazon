@@ -38,11 +38,12 @@ class Server {
   vector<Warehouse> whList;  // list of warehouse
   int ups_fd;
   int world_fd;
+  mutex seqNum_lck;  // mutex used to lock seqNum
 
  public:
   // ACK mechanism
   static vector<bool> seqNumTable;  // mark whether seqNum from amazon is acked.
-  static size_t curSeqNum;  // the sequence number to be used next(add in send thread)
+  static size_t curSeqNum;  // the sequence number to be used next, added in send thread
   static unordered_set<int>
       executeTable;  // mark whether specific response has been executed
 
@@ -59,13 +60,11 @@ class Server {
   void handleOrderRequest(string requestMsg);
   int selectWareHouse(const Order & order);
   void keepReceivingMsg();
-  void keepSendingMsg();
-
- private:
-  friend class AResponseHandler;
+  void keepSendingMsgToWorld();
+  void keepSendingMsgToUps();
 
  public:  //如果使用线程池，放回private
-  static connection * connectDB(string dbName, string userName, string W);
+  static connection * connectDB(string dbName, string userName, string password);
   static void initializeDB(connection * C);
   static void disConnectDB(connection * C);
 
@@ -76,5 +75,3 @@ class Server {
 };
 
 #endif
-
-//TODO: 部分成员变量改为static?
