@@ -3,6 +3,7 @@
 #include "protobufCommunication.hpp"
 #include "socket.h"
 #include "sql_function.h"
+#include "OrderProcess.h"
 
 /* ------------------------ "server initialize functions" ------------------------ */
 Server::Server() {
@@ -158,73 +159,9 @@ void Server::acceptOrderRequest() {
     }
 
     // TODO: put request into task queue, using thread pool
-    thread t(&Server::handleOrderRequest, this, msg);
+    thread t(parseOrder, this, msg);
     t.detach();
   }
-}
-
-/*
-  Analyze order from front-end web, save it to database. Then function will 
-  determine which warehouse to use and check its inventory. If inventory is enough,
-  it will begin process it, else it will wait for the incoming inventory.
-*/
-void Server::handleOrderRequest(string requestMsg) {
-  cout << "successfully receive order request.\n";
-  Order order(requestMsg);
-  connection * C = connectDB("mini_amazon", "postgres", "passw0rd");
-
-  //save it to database
-  saveOrderInDB(C, order);
-
-  // determine to use which warehouse.
-  int whIndex = selectWareHouse(order);
-
-  // Check the inventory of warehouse
-  while (1) {
-    try {
-      int itemId = order.getItemId();
-      int itemAmt = order.getAmount();
-      int version = -1;
-      bool isEnough = checkInventory(C, itemId, itemAmt, whIndex, version);
-      if (isEnough == true) {
-        decreaseInventory(C, whIndex, -1 * itemAmt, itemId, version);
-        //create new thread to begin packing and order a truck
-        disConnectDB(C);
-        return;
-      }
-      else {
-        ACommands ac;
-        APurchaseMore * ap = ac.add_buy();
-        ap->set_whnum(whIndex);
-        AProduct * aproduct = ap->add_things();
-        aproduct->set_id(itemId);
-        aproduct->set_count(10 * itemAmt);
-        aproduct->set_description(getDescription(C, itemId));
-        worldQueue.push(ac);
-        this_thread::sleep_for(std::chrono::milliseconds(1000));
-      }
-    }
-    catch (const VersionErrorException & e) {
-      std::cerr << e.what() << '\n';
-    }
-  }
-}
-
-/*
-  select a warehouse, which is closest to the order address. return the selected warehouse index.
-*/
-int Server::selectWareHouse(const Order & order) {
-  int index = -1;
-  int minDistance = INT_MAX;
-  for (int i = 0; i < whList.size(); i++) {
-    int delta_x = abs(whList[i].getX() - order.getAddressX());
-    int delta_y = abs(whList[i].getY() - order.getAddressY());
-    if ((delta_x * delta_x + delta_y * delta_y) < minDistance) {
-      minDistance = delta_x * delta_x + delta_y * delta_y;
-      index = i;
-    }
-  }
-  return index;
 }
 
 /* ------------------------ "DB related functions" ------------------------ */
@@ -321,29 +258,6 @@ void Server::keepSendingMsgToWorld() {
   while (1) {
     ACommands msg;
     worldQueue.wait_and_pop(msg);
-
-    // add seqNum
-    for (int i = 0; i < msg.buy_size(); i++) {
-      lock_guard<mutex> lck(seqNum_lck);
-      msg.mutable_buy(i)->set_seqnum(curSeqNum % MAX_SEQNUM);
-      curSeqNum++;
-    }
-    for (int i = 0; i < msg.topack_size(); i++) {
-      lock_guard<mutex> lck(seqNum_lck);
-      msg.mutable_topack(i)->set_seqnum(curSeqNum % MAX_SEQNUM);
-      curSeqNum++;
-    }
-    for (int i = 0; i < msg.load_size(); i++) {
-      lock_guard<mutex> lck(seqNum_lck);
-      msg.mutable_load(i)->set_seqnum(curSeqNum % MAX_SEQNUM);
-      curSeqNum++;
-    }
-    for (int i = 0; i < msg.queries_size(); i++) {
-      lock_guard<mutex> lck(seqNum_lck);
-      msg.mutable_queries(i)->set_seqnum(curSeqNum % MAX_SEQNUM);
-      curSeqNum++;
-    }
-
     if (sendMesgTo(msg, out.get()) == false) {
       throw MyException("fail to send message in world.");
     }
@@ -359,24 +273,6 @@ void Server::keepSendingMsgToUps() {
   while (1) {
     AUCommand msg;
     upsQueue.wait_and_pop(msg);
-
-    // add seqNum
-    for (int i = 0; i < msg.deliver_size(); i++) {
-      lock_guard<mutex> lck(seqNum_lck);
-      msg.mutable_deliver(i)->set_seqnum(curSeqNum % MAX_SEQNUM);
-      curSeqNum++;
-    }
-    for (int i = 0; i < msg.order_size(); i++) {
-      lock_guard<mutex> lck(seqNum_lck);
-      msg.mutable_order(i)->set_seqnum(curSeqNum % MAX_SEQNUM);
-      curSeqNum++;
-    }
-    for (int i = 0; i < msg.error_size(); i++) {
-      lock_guard<mutex> lck(seqNum_lck);
-      msg.mutable_error(i)->set_seqnum(curSeqNum % MAX_SEQNUM);
-      curSeqNum++;
-    }
-
     if (sendMesgTo(msg, out.get()) == false) {
       throw MyException("fail to send message in ups.");
     }

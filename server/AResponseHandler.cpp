@@ -17,6 +17,12 @@ AResponseHandler::AResponseHandler(const AResponses & r) {
     aloadeds.push_back(std::move(r.loaded(i)));
     seqNums.push_back(r.loaded(i).seqnum());
   }
+
+  // record acks from world
+  for(int i=0;i<r.acks_size();i++){
+    Server::seqNumTable[r.acks(i)] = true;
+  }
+  
 }
 
 /*
@@ -42,7 +48,7 @@ bool checkExecutedAndRecordIt(int seqNum) {
     use different threads to handle different type of responses, and ack those messages.
 */
 void AResponseHandler::handle() {
-  // ACK responses from world.
+  // ACK responses to world.
   ACommands ac;
   for (int i = 0; i < seqNums.size(); i++) {
     ac.set_acks(i, seqNums[i]);

@@ -11,6 +11,7 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include <queue>
 
 #include "./protobuf/AUprotocolV3.pb.h"
 #include "./protobuf/world_amazon.pb.h"
@@ -35,16 +36,16 @@ class Server {
   int worldID;
   int n_warehouse;           // number of warehouse
   int wh_distance;           // distance between neighbour warehouse
-  vector<Warehouse> whList;  // list of warehouse
+  static vector<Warehouse> whList;  // list of warehouse 
   int ups_fd;
   int world_fd;
-  mutex seqNum_lck;  // mutex used to lock seqNum
-
+  
  public:
   // maintain seqNum from amazon
   static vector<bool>
       seqNumTable;          // record whether commands with specific seqNum is acked.
   static size_t curSeqNum;  // next seqNum to be used.
+  static mutex seqNum_lck;  // mutex used to lock seqNum
 
   // Records whether a response with a specific sequence number is executed
   // if seqNum is in executeTable, this response has been executed.
@@ -55,12 +56,14 @@ class Server {
   static ThreadSafe_queue<ACommands> worldQueue;
   static ThreadSafe_queue<AUCommand> upsQueue;
 
+  //order queue. save orders for later processing
+  static queue<Order> orderQueue;
+  static mutex order_lck;
+
  private:
   void acceptOrderRequest();
   void initializeWorld();
   void getWorldIDFromUPS();
-  void handleOrderRequest(string requestMsg);
-  int selectWareHouse(const Order & order);
   void keepReceivingMsg();
   void keepSendingMsgToWorld();
   void keepSendingMsgToUps();
@@ -69,6 +72,7 @@ class Server {
   static connection * connectDB(string dbName, string userName, string password);
   static void initializeDB(connection * C);
   static void disConnectDB(connection * C);
+  static vector<Warehouse> getWhList() {return whList;}
 
  public:
   Server();

@@ -14,5 +14,5 @@ class AResponseHandler {
   void handle();
 
  private:
- bool checkExecutedAndRecordIt(int seqNum);
+  bool checkExecutedAndRecordIt(int seqNum);
 };
