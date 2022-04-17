@@ -1,53 +1,73 @@
- #include "AResponseHandler.h" 
- #include "OrderProcess.h"
+#include "AResponseHandler.h"
 
+#include "OrderProcess.h"
 
+AResponseHandler::AResponseHandler(const AResponses & r) {
+  for (int i = 0; i < r.arrived_size(); i++) {
+    apurchasemores.push_back(std::move(r.arrived(i)));
+    seqNums.push_back(r.arrived(i).seqnum());
+  }
 
- AResponseHandler::AResponseHandler(const AResponses& r) {
-     for(int i =0; i < r.arrived_size(); i++) {
-        apurchasemores.push_back(std::move(r.arrived(i)));
-        seqNums.push_back(std::move(r.arrived(i).seqnum()));
-     }
+  for (int i = 0; i < r.ready_size(); i++) {
+    apackeds.push_back(std::move(r.ready(i)));
+    seqNums.push_back(r.ready(i).seqnum());
+  }
 
-     for(int i =0; i < r.ready_size(); i++) {
-         apackeds.push_back(std::move(r.ready(i)));
-         seqNums.push_back(std::move(r.ready(i).seqnum()));
-     }
-
-     for(int i =0; i < r.loaded_size(); i++) {
-         aloadeds.push_back(std::move(r.loaded(i)));
-         seqNums.push_back(std::move(r.loaded(i).seqnum()));
-     }
- }
+  for (int i = 0; i < r.loaded_size(); i++) {
+    aloadeds.push_back(std::move(r.loaded(i)));
+    seqNums.push_back(r.loaded(i).seqnum());
+  }
+}
 
 /*
-    use a new thread to handle different type of responses, and ack those messages.
+  check whether given seqNum has been executed.If yes, return true,
+  else return false. If given seqNum is not executed, record it in 
+  the executed table.
 */
- void AResponseHandler::handle(){
-    // ACK seqNums(create ACommands, and put it into queue)
-    ACommands acommand;
-    for(int i =0; i < seqNums.size(); i++) {
-        acommand.set_acks(i,seqNums[i]);
+bool checkExecutedAndRecordIt(int seqNum) {
+  // check whether this response has been executed
+  auto it = Server::executeTable_World.find(seqNum);
+
+  // if not exists, insert seqNum in the set, else exit
+  if (it == Server::executeTable_World.end()) {
+    Server::executeTable_World.insert(seqNum);
+    return false;
+  }
+  else {
+    return true;
+  }
+}
+
+/*
+    use different threads to handle different type of responses, and ack those messages.
+*/
+void AResponseHandler::handle() {
+  // ACK responses from world.
+  ACommands ac;
+  for (int i = 0; i < seqNums.size(); i++) {
+    ac.set_acks(i, seqNums[i]);
+  }
+  Server::worldQueue.push(ac);
+
+  // use different threads to handle different responses.
+  for (auto r : apurchasemores) {
+    if (checkExecutedAndRecordIt(r.seqnum()) == false) {
+      thread t(processPurchaseMore, r);
+      t.detach();
     }
-    // push it to the queue
-    Server::worldQueue.push(acommand);
+  }
 
-    // create a new thread to handle different of responses.
-    for(auto r:apurchasemores){
-        thread t(processPurchaseMore, r);  
-        t.detach();
+  for (auto r : apackeds) {
+    if (checkExecutedAndRecordIt(r.seqnum()) == false) {
+      thread t(processPacked, r);
+      t.detach();
     }
+  }
 
-    for(auto r:apackeds){
-        thread t(processPacked, r);  
-        t.detach();
+  for (auto r : aloadeds) {
+    if (checkExecutedAndRecordIt(r.seqnum()) == false) {
+      thread t(processLoaded, r);
+      t.detach();
     }
-
-    for(auto r:aloadeds){
-        thread t(processLoaded, r);  
-        t.detach();
-    }
-
- }
-
-
+  }
+}

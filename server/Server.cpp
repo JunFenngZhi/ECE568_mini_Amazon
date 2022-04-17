@@ -204,7 +204,7 @@ void Server::handleOrderRequest(string requestMsg) {
         this_thread::sleep_for(std::chrono::milliseconds(1000));
       }
     }
-    catch (const std::VersionErrorException & e) {
+    catch (const VersionErrorException & e) {
       std::cerr << e.what() << '\n';
     }
   }
@@ -354,7 +354,7 @@ void Server::keepSendingMsgToWorld() {
   keep sending message from upsQueue to UPS. this function will block when
   the queue is empty. 
 */
-void keepSendingMsgToUps() {
+void Server::keepSendingMsgToUps() {
   unique_ptr<socket_out> out(new socket_out(ups_fd));
   while (1) {
     AUCommand msg;

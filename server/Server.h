@@ -41,17 +41,19 @@ class Server {
   mutex seqNum_lck;  // mutex used to lock seqNum
 
  public:
-  // ACK mechanism
-  static vector<bool> seqNumTable;  // mark whether seqNum from amazon is acked.
-  static size_t curSeqNum;  // the sequence number to be used next, added in send thread
-  static unordered_set<int>
-      executeTable;  // mark whether specific response has been executed
+  // maintain seqNum from amazon
+  static vector<bool>
+      seqNumTable;          // record whether commands with specific seqNum is acked.
+  static size_t curSeqNum;  // next seqNum to be used.
 
-  //IO thread
-  static ThreadSafe_queue<ACommands>
-      worldQueue;  // store the ACommands objects that need to be sent to the World.
-  static ThreadSafe_queue<AUCommand>
-      upsQueue;  // store the AUCommand objects that need to be sent to the UPS.
+  // Records whether a response with a specific sequence number is executed
+  // if seqNum is in executeTable, this response has been executed.
+  static unordered_set<int> executeTable_World;
+  static unordered_set<int> executeTable_Ups;
+
+  //message queue, transfer message to sending threads
+  static ThreadSafe_queue<ACommands> worldQueue;
+  static ThreadSafe_queue<AUCommand> upsQueue;
 
  private:
   void acceptOrderRequest();
