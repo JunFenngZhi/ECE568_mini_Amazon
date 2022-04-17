@@ -16,7 +16,6 @@ void dropAllTable(connection* C);
 bool checkInventory(connection* C, int itemId, int itemAmount, int whID, int& version);
 void addInventory(connection * C, int whID, int count, int productId);
 void decreaseInventory(connection * C, int whID, int count, int productId, int version);
-//TODO
 string getDescription(connection * C, int itemId);
-void saveOrderInDB(connection* C, const Order* order);
+void saveOrderInDB(connection* C, const Order & order);
 #endif

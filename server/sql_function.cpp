@@ -69,10 +69,43 @@ bool checkInventory(connection * C, int itemId, int itemAmount, int whID, int & 
 }
 
 
-void saveOrderInDB(connection* C, const Order* order) {
+
+/*
+    get orderInfo from the front end, and save this order into the database
+*/
+void saveOrderInDB(connection* C, const Order & order) {
+    work W(*C);
+    stringstream sql;
+    int addrx = order.getAddressX();
+    int addry = order.getAddressY();
+    int amount = order.getAmount();
+    int upsid = order.getUPSId();
+    int itemid = order.getItemId();
+    float price = order.getPrice();
+    sql << "INSERT INTO ORDER (ADDRX, ADDRY, AMOUNT, UPSID, ITEMID, PRICE) "
+            "VALUES(" << addrx << ", " << addry << ", " << amount << ", " << upsid << ", " << itemid << ", " << price << ");";
+
+    W.exec(sql.str());
+    W.commit();
+}
 
 
+/*
+    get description from the item 
+*/
+string getDescription(connection * C, int itemId) {
+    //create nontransaction object for SELECT operation
+    nontransaction N(*C);
 
+    // create sql statement, we need to select item amount from inventory table
+    stringstream sql;  
+    sql << "SELECT DESCRIPTION FROM ITEM WHERE "
+            "ITEMID= " << itemId << ";";
+
+    // execute sql statement and get the result set    
+    result ItemRes( N.exec(sql.str()));
+    string description = ItemRes[0][0].as<string>();
+    return description;
 }
 
 
@@ -91,19 +124,22 @@ void addInventory(connection * C, int whID, int count, int productId) {
 }
 
 
-/**
- * @brief update specific order status to be 'packed'
- * 
- */
+/*
+    update specific order status to be 'packed'
+*/
 void updatePacked(connection * C, int packageId) {
     // work W(*C);
     // stringstream sql;
-    // sql << "UPDATE ORDER set STATUS= " << W.quote("packed") << "WHERE PACKID= " << packageId << 
+    // sql << "UPDATE ORDER set STATUS= " << W.quote("packed") << "WHERE PACKID= " << packageId << ";";
 
+    // W.exec(sql.str());
+    // W.commit();    
 
 }
 
-
+/*
+    decrease the inventory of the product in the warehouse and check the version id of the inventory
+*/
 void decreaseInventory(connection * C, int whID, int count, int productId, int version) {
     work W(*C);
     stringstream sql;
@@ -111,6 +147,11 @@ void decreaseInventory(connection * C, int whID, int count, int productId, int v
     sql << "UPDATE INVENTORY set ITEMAMOUNT = INVENTORY.ITEMAMOUNT+" << count << 
     ", VERSION = INVENTORY.VERSION+1" << " WHERE ITEMID= " << productId << " AND WHID= " << whID << " AND VERSION= "<< version << ";";
 
-    W.exec(sql);
+    result Updates(W.exec(sql.str()));
+    result::size_type rows = Updates.affected_rows();
+    if (rows == 0) {
+        throw VersionErrorException(
+            "Invalid update: version of this order does not match.\n");
+    }
     W.commit();
 }

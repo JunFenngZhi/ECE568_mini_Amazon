@@ -174,7 +174,7 @@ void Server::handleOrderRequest(string requestMsg) {
   connection * C = connectDB("mini_amazon", "postgres", "passw0rd");
 
   //save it to database
-  saveOrderInDB(connection* C, const Order* order);
+  saveOrderInDB(C, order);
 
   // determine to use which warehouse.
   int whIndex = selectWareHouse(order);
@@ -187,7 +187,7 @@ void Server::handleOrderRequest(string requestMsg) {
       int version = -1;
       bool isEnough = checkInventory(C, itemId, itemAmt, whIndex, version);
       if (isEnough == true) {
-        decreaseInventory(C, whIndex, -1 * itemAmt, itemID, version);
+        decreaseInventory(C, whIndex, -1 * itemAmt, itemId, version);
         //create new thread to begin packing and order a truck
         disConnectDB(C);
         return;
@@ -199,12 +199,12 @@ void Server::handleOrderRequest(string requestMsg) {
         AProduct * aproduct = ap->add_things();
         aproduct->set_id(itemId);
         aproduct->set_count(10 * itemAmt);
-        aproduct->set_description(getDesricption(C, itemId));
+        aproduct->set_description(getDescription(C, itemId));
         worldQueue.push(ac);
         this_thread::sleep_for(std::chrono::milliseconds(1000));
       }
     }
-    catch (const std::VersionErrorException & e) {
+    catch (const VersionErrorException & e) {
       std::cerr << e.what() << '\n';
     }
   }
@@ -325,22 +325,22 @@ void Server::keepSendingMsgToWorld() {
     // add seqNum
     for (int i = 0; i < msg.buy_size(); i++) {
       lock_guard<mutex> lck(seqNum_lck);
-      msg.buy(i).set_seqnum(curSeqNum % MAX_SEQNUM);
+      msg.mutable_buy(i)->set_seqnum(curSeqNum % MAX_SEQNUM);
       curSeqNum++;
     }
     for (int i = 0; i < msg.topack_size(); i++) {
       lock_guard<mutex> lck(seqNum_lck);
-      msg.topack(i).set_seqnum(curSeqNum % MAX_SEQNUM);
+      msg.mutable_topack(i)->set_seqnum(curSeqNum % MAX_SEQNUM);
       curSeqNum++;
     }
     for (int i = 0; i < msg.load_size(); i++) {
       lock_guard<mutex> lck(seqNum_lck);
-      msg.load(i).set_seqnum(curSeqNum % MAX_SEQNUM);
+      msg.mutable_load(i)->set_seqnum(curSeqNum % MAX_SEQNUM);
       curSeqNum++;
     }
     for (int i = 0; i < msg.queries_size(); i++) {
       lock_guard<mutex> lck(seqNum_lck);
-      msg.queries(i).set_seqnum(curSeqNum % MAX_SEQNUM);
+      msg.mutable_queries(i)->set_seqnum(curSeqNum % MAX_SEQNUM);
       curSeqNum++;
     }
 
@@ -354,7 +354,7 @@ void Server::keepSendingMsgToWorld() {
   keep sending message from upsQueue to UPS. this function will block when
   the queue is empty. 
 */
-void keepSendingMsgToUps() {
+void Server::keepSendingMsgToUps() {
   unique_ptr<socket_out> out(new socket_out(ups_fd));
   while (1) {
     AUCommand msg;
@@ -363,17 +363,17 @@ void keepSendingMsgToUps() {
     // add seqNum
     for (int i = 0; i < msg.deliver_size(); i++) {
       lock_guard<mutex> lck(seqNum_lck);
-      msg.deliver(i).set_seqnum(curSeqNum % MAX_SEQNUM);
+      msg.mutable_deliver(i)->set_seqnum(curSeqNum % MAX_SEQNUM);
       curSeqNum++;
     }
     for (int i = 0; i < msg.order_size(); i++) {
       lock_guard<mutex> lck(seqNum_lck);
-      msg.order(i).set_seqnum(curSeqNum % MAX_SEQNUM);
+      msg.mutable_order(i)->set_seqnum(curSeqNum % MAX_SEQNUM);
       curSeqNum++;
     }
     for (int i = 0; i < msg.error_size(); i++) {
       lock_guard<mutex> lck(seqNum_lck);
-      msg.error(i).set_seqnum(curSeqNum % MAX_SEQNUM);
+      msg.mutable_error(i)->set_seqnum(curSeqNum % MAX_SEQNUM);
       curSeqNum++;
     }
 

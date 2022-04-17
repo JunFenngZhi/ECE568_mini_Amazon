@@ -18,6 +18,9 @@ class Item(models.Model):
     seller = models.CharField(max_length=100)
     version = models.IntegerField(default=1)  # need default value.
 
+    class Meta:
+        db_table = 'Item'
+
 
 class Order(models.Model):
     packId = models.IntegerField(primary_key=True)
@@ -37,8 +40,11 @@ class Order(models.Model):
     amount = models.IntegerField()
     upsId = models.IntegerField()
     itemId = models.ForeignKey(Item, on_delete=models.SET_NULL, null=True)
-    totalPrice = models.FloatField(max_length=1000)
+    price = models.FloatField(max_length=1000)
     version = models.IntegerField(default=1)  # need default value.
+
+    class Meta:
+        db_table = 'Order'
 
 
 class Inventory(models.Model):
@@ -49,3 +55,4 @@ class Inventory(models.Model):
 
     class Meta:
         unique_together = ["itemId", "whID"]
+        db_table = 'Inventory'

@@ -13,7 +13,7 @@ class Order {
   int address_y;
   int amount;
   int item_id;
-  float item_price;
+  float price;
   int UPS_ID;
 
  public:
@@ -44,13 +44,13 @@ class Order {
     address_y = stoi(res[1]);
     amount = stoi(res[2]);
     item_id = stoi(res[3]);
-    item_price = stof(res[4]);
+    price = stof(res[4]);
   }
   int getAddressX() const { return address_x; }
   int getAddressY() const { return address_y; }
   int getAmount() const { return amount; }
   int getItemId() const { return item_id; }
-  float getItemPrice() const { return item_price; }
+  float getPrice() const { return price; }
   int getUPSId() const { return UPS_ID; }
 };
 
