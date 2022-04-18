@@ -8,10 +8,10 @@
 #include <iostream>
 #include <mutex>
 #include <pqxx/pqxx>
+#include <queue>
 #include <string>
 #include <thread>
 #include <vector>
-#include <queue>
 
 #include "./protobuf/AUprotocolV3.pb.h"
 #include "./protobuf/world_amazon.pb.h"
@@ -25,8 +25,30 @@ using namespace std;
 using namespace pqxx;
 
 const int MAX_SEQNUM = 65536;
+typedef std::shared_ptr<Server> Ptr;
 
 class Server {
+  // singleton pattern member and member funtions
+ public:
+  ~Server() { std::cout << "destructor called!" << std::endl; }
+  Server(Server &) = delete;
+  Server & operator=(const Server &) = delete;
+  static Ptr get_instance();
+
+ private:
+  static Ptr m_instance_ptr;
+  static mutex m_mutex;
+
+  // Server member functions and its related fields
+ private:
+  Server();
+  void acceptOrderRequest();
+  void initializeWorld();
+  void getWorldIDFromUPS();
+  void keepReceivingMsg();
+  void keepSendingMsgToWorld();
+  void keepSendingMsgToUps();
+
  private:
   string webPortNum;
   string worldHostName;
@@ -36,48 +58,36 @@ class Server {
   int worldID;
   int n_warehouse;           // number of warehouse
   int wh_distance;           // distance between neighbour warehouse
-  static vector<Warehouse> whList;  // list of warehouse 
+  vector<Warehouse> whList;  // list of warehouse
   int ups_fd;
   int world_fd;
-  
+
  public:
   // maintain seqNum from amazon
-  static vector<bool>
-      seqNumTable;          // record whether commands with specific seqNum is acked.
-  static size_t curSeqNum;  // next seqNum to be used.
-  static mutex seqNum_lck;  // mutex used to lock seqNum
+  vector<bool> seqNumTable;  // record whether commands with specific seqNum is acked.
+  size_t curSeqNum;          // next seqNum to be used.
+  mutex seqNum_lck;          // mutex used to lock seqNum
 
   // Records whether a response with a specific sequence number is executed
   // if seqNum is in executeTable, this response has been executed.
-  static unordered_set<int> executeTable_World;
-  static unordered_set<int> executeTable_Ups;
+  unordered_set<int> executeTable_World;
+  unordered_set<int> executeTable_Ups;
 
   //message queue, transfer message to sending threads
-  static ThreadSafe_queue<ACommands> worldQueue;
-  static ThreadSafe_queue<AUCommand> upsQueue;
+  ThreadSafe_queue<ACommands> worldQueue;
+  ThreadSafe_queue<AUCommand> upsQueue;
 
   //order queue. save orders for later processing
-  static queue<Order> orderQueue;
-  static mutex order_lck;
+  queue<Order> orderQueue;
+  mutex order_lck;
 
- private:
-  void acceptOrderRequest();
-  void initializeWorld();
-  void getWorldIDFromUPS();
-  void keepReceivingMsg();
-  void keepSendingMsgToWorld();
-  void keepSendingMsgToUps();
-
- public:  
+ public:
+  void run();
+  vector<Warehouse> getWhList() { return whList; }
   static connection * connectDB(string dbName, string userName, string password);
   static void initializeDB(connection * C);
   static void disConnectDB(connection * C);
-  static vector<Warehouse> getWhList() {return whList;}
-
- public:
-  Server();
-  ~Server() {}
-  void run();
+  
 };
 
 #endif
