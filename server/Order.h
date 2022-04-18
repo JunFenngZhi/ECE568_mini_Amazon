@@ -21,7 +21,7 @@ class Order {
   /*
     Parse the incoming orderInfo string from the front end to create the object.
   */
-  Order::Order(const string & str) {
+  Order(const string & str) {
     //the order input string format is as following:
     //addrx:addry:amount:itemID:itemPrice:UPSID
     //res[0]:res[1]:res[2]:res[3]:res[4]:res[5]

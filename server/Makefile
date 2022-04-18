@@ -8,8 +8,8 @@ VERSION = -std=c++11
 
 all: server
 
-server: Server.h exception.h socket.h sql_function.h Warehouse.h protobufCommunication.hpp $(PROTO_H)
-	g++ -o server main.cpp Server.cpp sql_function.cpp socket.cpp $(PROTO_CC) $(PQXX) $(GDB) $(THREAD) $(GPB) $(VERSION)
+server: Server.h exception.h Order.h socket.h AResponseHandler.h OrderProcess.h sql_function.h Warehouse.h protobufCommunication.hpp ThreadSafe_queue.h $(PROTO_H)
+	g++ -o server main.cpp Server.cpp sql_function.cpp AResponseHandler.cpp OrderProcess.cpp socket.cpp $(PROTO_CC) $(PQXX) $(GDB) $(THREAD) $(GPB) $(VERSION)
 
 .PHONY:
 	clean
