@@ -6,12 +6,14 @@
 void parseOrder(string msg) {
   cout << "successfully receive order request.\n";
   Order order(msg);
-  connection * C = Server::connectDB("mini_amazon", "postgres", "passw0rd");
+  unique_ptr<connection> C(Server::connectDB("mini_amazon", "postgres", "passw0rd"));
 
-  saveOrderInDB(C, order);
+  saveOrderInDB(C.get(), order);
+  Server::disConnectDB(C.get());
+
   processOrder(order);
 
-  Server::disConnectDB(C);
+ 
 }
 
 /*
@@ -20,7 +22,7 @@ void parseOrder(string msg) {
   world.
 */
 void processOrder(const Order & order) {
-  connection * C = Server::connectDB("mini_amazon", "postgres", "passw0rd");
+  unique_ptr<connection> C(Server::connectDB("mini_amazon", "postgres", "passw0rd"));
 
   // determine to use which warehouse.
   int whIndex = selectWareHouse(order);
@@ -31,10 +33,10 @@ void processOrder(const Order & order) {
       int itemId = order.getItemId();
       int itemAmt = order.getAmount();
       int version = -1;
-      bool isEnough = checkInventory(C, itemId, itemAmt, whIndex, version);
+      bool isEnough = checkInventory(C.get(), itemId, itemAmt, whIndex, version);
       if (isEnough == true) {
-        decreaseInventory(C, whIndex, -1 * itemAmt, itemId, version);
-        Server::disConnectDB(C);
+        decreaseInventory(C.get(), whIndex, -1 * itemAmt, itemId, version);
+        Server::disConnectDB(C.get());
         //create new thread to begin packing and order a truck
         return;
       }
@@ -51,7 +53,7 @@ void processOrder(const Order & order) {
         AProduct * aproduct = ap->add_things();
         aproduct->set_id(itemId);
         aproduct->set_count(10 * itemAmt);
-        aproduct->set_description(getDescription(C, itemId));
+        aproduct->set_description(getDescription(C.get(), itemId));
 
         // add seqNum to this command.
         Server::seqNum_lck.lock();
@@ -75,7 +77,7 @@ void processOrder(const Order & order) {
     }
   }
 
-  Server::disConnectDB(C);
+  Server::disConnectDB(C.get());
 }
 
 /*
@@ -101,7 +103,7 @@ int selectWareHouse(const Order & order) {
     (Go to the database to increase the corresponding product inventory in the corresponding warehouse)
 */
 void processPurchaseMore(APurchaseMore r) {
-  connection * C = Server::connectDB("mini_amazon", "postgres", "passw0rd");
+  unique_ptr<connection> C(Server::connectDB("mini_amazon", "postgres", "passw0rd"));
 
   // get warehouse id
   int whID = r.whnum();
@@ -116,8 +118,9 @@ void processPurchaseMore(APurchaseMore r) {
   for (int i = 0; i < products.size(); i++) {
     int count = products[i].count();
     int productId = products[i].id();
-    addInventory(C, whID, count, productId);
+    addInventory(C.get(), whID, count, productId);
   }
+  Server::disConnectDB(C.get());
 
   // process previous saved order
   Server::order_lck.lock();
@@ -126,7 +129,7 @@ void processPurchaseMore(APurchaseMore r) {
   Server::order_lck.unlock();
 
   processOrder(order);
-  Server::disConnectDB(C);
+  
 }
 
 /*
@@ -135,7 +138,7 @@ void processPurchaseMore(APurchaseMore r) {
 */
 void processPacked(APacked r) {
   //Connect the database
-  connection * C = Server::connectDB("mini_amazon", "postgres", "passw0rd");
+  unique_ptr<connection> C(Server::connectDB("mini_amazon", "postgres", "passw0rd"));
 
   //get shipid
   int packageId = r.shipid();

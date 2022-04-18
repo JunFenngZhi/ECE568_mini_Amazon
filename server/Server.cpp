@@ -14,7 +14,7 @@ Server::Server() {
   }
   n_warehouse = 9;  // should be an odd number for symetric
   wh_distance = 20;
-  webPortNum = "8888";
+  webPortNum = "9999";
   worldHostName = "vcm-25941.vm.duke.edu";
   worldPortNum = "12345";
   upsHostName = "0.0.0.0";
@@ -159,7 +159,7 @@ void Server::acceptOrderRequest() {
     }
 
     // TODO: put request into task queue, using thread pool
-    thread t(parseOrder, this, msg);
+    thread t(parseOrder, msg);
     t.detach();
   }
 }

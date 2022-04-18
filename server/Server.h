@@ -68,7 +68,7 @@ class Server {
   void keepSendingMsgToWorld();
   void keepSendingMsgToUps();
 
- public:  //如果使用线程池，放回private
+ public:  
   static connection * connectDB(string dbName, string userName, string password);
   static void initializeDB(connection * C);
   static void disConnectDB(connection * C);
