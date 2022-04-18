@@ -1,3 +1,6 @@
+#ifndef _PROTOBUFCOMMUNICATE_H
+#define _PROTOBUFCOMMUNICATE_H
+
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 
@@ -51,3 +54,5 @@ bool recvMesgFrom(T & message, google::protobuf::io::FileInputStream * in) {
   input.PopLimit(limit);
   return true;
 }
+
+#endif

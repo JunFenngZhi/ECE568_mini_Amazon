@@ -7,7 +7,7 @@ def sendOrder(orderInfo):
     print('orderInfo is: ' + orderInfo)
     print(orderInfo.encode())
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client.connect(('vcm-24026.vm.duke.edu', 8888))
+    client.connect(('vcm-24026.vm.duke.edu', 9999))
     # For test print
     print('connect to server success!')
     try:

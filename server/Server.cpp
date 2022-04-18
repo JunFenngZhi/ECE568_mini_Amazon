@@ -33,9 +33,9 @@ void Server::run() {
   try {
     //getWorldIDFromUPS();
     initializeWorld();
-    thread t_I(&Server::keepReceivingMsg, this);
-    thread t_O(&Server::keepSendingMsgToWorld, this);
-    thread t_O(&Server::keepSendingMsgToUps, this);
+    thread tI(&Server::keepReceivingMsg, this);
+    thread tO_world(&Server::keepSendingMsgToWorld, this);
+    thread tO_ups(&Server::keepSendingMsgToUps, this);
     acceptOrderRequest();
   }
   catch (const std::exception & e) {

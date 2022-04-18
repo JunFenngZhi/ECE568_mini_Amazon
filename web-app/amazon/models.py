@@ -9,7 +9,7 @@ from django.utils.timezone import now
 
 
 class Item(models.Model):
-    itemId = models.IntegerField(primary_key=True)
+    item_id = models.IntegerField(primary_key=True)
     name = models.CharField(max_length=100)
     description = models.CharField(
         max_length=100, blank=False, null=False, unique=True)
@@ -19,13 +19,13 @@ class Item(models.Model):
     version = models.IntegerField(default=1)  # need default value.
 
     class Meta:
-        db_table = 'Item'
+        db_table = 'item'
 
 
 class Order(models.Model):
-    packId = models.IntegerField(primary_key=True)
-    addrX = models.IntegerField()
-    addrY = models.IntegerField()
+    pack_id = models.IntegerField(primary_key=True)
+    addr_x = models.IntegerField()
+    addr_y = models.IntegerField()
     time = models.DateTimeField(default=now)
     STATUS_CHOICES = [
         ('PACKING', 'packing'),
@@ -38,21 +38,21 @@ class Order(models.Model):
     status = models.CharField(
         max_length=50, choices=STATUS_CHOICES, default='packing')
     amount = models.IntegerField()
-    upsId = models.IntegerField()
-    itemId = models.ForeignKey(Item, on_delete=models.SET_NULL, null=True)
+    ups_id = models.IntegerField()
+    item = models.ForeignKey(Item, on_delete=models.SET_NULL, null=True)
     price = models.FloatField(max_length=1000)
     version = models.IntegerField(default=1)  # need default value.
 
     class Meta:
-        db_table = 'Order'
+        db_table = 'order'
 
 
 class Inventory(models.Model):
-    itemId = models.ForeignKey(Item, on_delete=models.SET_NULL, null=True)
-    itemAmount = models.IntegerField()
-    whID = models.IntegerField()
+    item = models.ForeignKey(Item, on_delete=models.SET_NULL, null=True)
+    item_amount = models.IntegerField()
+    wh_id = models.IntegerField()
     version = models.IntegerField(default=1)  # need default value.
 
     class Meta:
-        unique_together = ["itemId", "whID"]
-        db_table = 'Inventory'
+        unique_together = ["item", "wh_id"]
+        db_table = 'inventory'

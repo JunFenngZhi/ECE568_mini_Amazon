@@ -1,5 +1,11 @@
+#ifndef _ARESPONSEHANDLER_H
+#define _ARESPONSEHANDLER_H
+
 #include "Server.h"
 #include "protobufCommunication.hpp"
+#include <vector>
+
+using namespace std;
 
 class AResponseHandler {
  private:
@@ -16,3 +22,5 @@ class AResponseHandler {
  private:
   bool checkExecutedAndRecordIt(int seqNum);
 };
+
+#endif
