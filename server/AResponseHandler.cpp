@@ -20,7 +20,8 @@ AResponseHandler::AResponseHandler(const AResponses & r) {
 
   // record acks from world
   for(int i=0;i<r.acks_size();i++){
-    Server::seqNumTable[r.acks(i)] = true;
+    Server::Ptr server = Server::get_instance();
+    server->seqNumTable[r.acks(i)] = true;
   }
   
 }
@@ -32,11 +33,12 @@ AResponseHandler::AResponseHandler(const AResponses & r) {
 */
 bool checkExecutedAndRecordIt(int seqNum) {
   // check whether this response has been executed
-  auto it = Server::executeTable_World.find(seqNum);
+  Server::Ptr server = Server::get_instance();
+  auto it = server->executeTable_World.find(seqNum);
 
   // if not exists, insert seqNum in the set, else exit
-  if (it == Server::executeTable_World.end()) {
-    Server::executeTable_World.insert(seqNum);
+  if (it == server->executeTable_World.end()) {
+    server->executeTable_World.insert(seqNum);
     return false;
   }
   else {
@@ -53,7 +55,8 @@ void AResponseHandler::handle() {
   for (int i = 0; i < seqNums.size(); i++) {
     ac.set_acks(i, seqNums[i]);
   }
-  Server::worldQueue.push(ac);
+  Server::Ptr server = Server::get_instance();
+  server->worldQueue.push(ac);
 
   // use different threads to handle different responses.
   for (auto r : apurchasemores) {

@@ -39,12 +39,11 @@ void processOrder(const Order & order) {
         return;
       }
       else {
-        Ptr server = Server::get_instance();
+        Server::Ptr server = Server::get_instance();
         // save order
         server->order_lck.lock();
         server->orderQueue.push(order);
         server->order_lck.unlock();
-
         // create APurchasemore command
         ACommands ac;
         APurchaseMore * ap = ac.add_buy();
@@ -55,17 +54,17 @@ void processOrder(const Order & order) {
         aproduct->set_description(getDescription(C.get(), itemId));
 
         // add seqNum to this command.
-        Server::seqNum_lck.lock();
-        int seqNum = Server::curSeqNum;
+        server->seqNum_lck.lock();
+        int seqNum = server->curSeqNum;
         ap->set_seqnum(seqNum);
-        Server::curSeqNum++;
-        Server::seqNum_lck.unlock();
+        server->curSeqNum++;
+        server->seqNum_lck.unlock();
 
         // keep sending until get acked.
         while (1) {
-          Server::worldQueue.push(ac);
+          server->worldQueue.push(ac);
           this_thread::sleep_for(std::chrono::milliseconds(1000));
-          if (Server::seqNumTable[seqNum] == true)
+          if (server->seqNumTable[seqNum] == true)
             break;
         }
         break;
@@ -85,7 +84,8 @@ void processOrder(const Order & order) {
 int selectWareHouse(const Order & order) {
   int index = -1;
   int minDistance = INT_MAX;
-  vector<Warehouse> whList = Server::getWhList();
+  Server::Ptr server = Server::get_instance();
+  vector<Warehouse> whList = server->getWhList();
   for (int i = 0; i < whList.size(); i++) {
     int delta_x = abs(whList[i].getX() - order.getAddressX());
     int delta_y = abs(whList[i].getY() - order.getAddressY());
@@ -122,10 +122,11 @@ void processPurchaseMore(APurchaseMore r) {
   Server::disConnectDB(C.get());
 
   // process previous saved order
-  Server::order_lck.lock();
-  Order order = Server::orderQueue.front();
-  Server::orderQueue.pop();
-  Server::order_lck.unlock();
+  Server::Ptr server = Server::get_instance();
+  server->order_lck.lock();
+  Order order = server->orderQueue.front();
+  server->orderQueue.pop();
+  server->order_lck.unlock();
 
   processOrder(order);
 }

@@ -25,11 +25,12 @@ using namespace std;
 using namespace pqxx;
 
 const int MAX_SEQNUM = 65536;
-typedef std::shared_ptr<Server> Ptr;
+
 
 class Server {
   // singleton pattern member and member funtions
  public:
+  typedef std::shared_ptr<Server> Ptr;
   ~Server() { std::cout << "destructor called!" << std::endl; }
   Server(Server &) = delete;
   Server & operator=(const Server &) = delete;
@@ -76,7 +77,7 @@ class Server {
   //message queue, transfer message to sending threads
   ThreadSafe_queue<ACommands> worldQueue;
   ThreadSafe_queue<AUCommand> upsQueue;
-
+  
   //order queue. save orders for later processing
   queue<Order> orderQueue;
   mutex order_lck;

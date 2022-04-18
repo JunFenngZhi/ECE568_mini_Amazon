@@ -5,11 +5,12 @@
 #include "socket.h"
 #include "sql_function.h"
 
+
 /* ------------------------ "server singleton pattern" ------------------------ */
-Ptr Server::m_instance_ptr = nullptr;
+Server::Ptr Server::m_instance_ptr = nullptr;
 mutex Server::m_mutex;
 
-Ptr Server::get_instance() {
+Server::Ptr Server::get_instance() {
   if (m_instance_ptr == nullptr) {
     std::lock_guard<std::mutex> lk(m_mutex);
     if (m_instance_ptr == nullptr) {

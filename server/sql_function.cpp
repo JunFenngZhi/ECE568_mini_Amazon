@@ -48,8 +48,8 @@ bool checkInventory(connection * C, int itemId, int itemAmount, int whID, int & 
 
     // create sql statement, we need to select item amount from inventory table
     stringstream sql;  
-    sql << "SELECT ITEMAMOUNT, VERSION FROM INVENTORY WHERE "
-            "ITEMID= " << itemId << "AND WHID= " << whID <<";";
+    sql << "SELECT ITEM_AMOUNT, VERSION FROM INVENTORY WHERE "
+            "ITEM_ID= " << itemId << "AND WH_ID= " << whID <<";";
 
     // execute sql statement and get the result set    
     result InventoryRes( N.exec(sql.str()));
@@ -82,7 +82,7 @@ void saveOrderInDB(connection* C, const Order & order) {
     int upsid = order.getUPSId();
     int itemid = order.getItemId();
     float price = order.getPrice();
-    sql << "INSERT INTO ORDER (ADDRX, ADDRY, AMOUNT, UPSID, ITEMID, PRICE) "
+    sql << "INSERT INTO ORDER (ADDR_X, ADDR_Y, AMOUNT, UPS_ID, ITEM_ID, PRICE) "
             "VALUES(" << addrx << ", " << addry << ", " << amount << ", " << upsid << ", " << itemid << ", " << price << ");";
 
     W.exec(sql.str());
@@ -100,7 +100,7 @@ string getDescription(connection * C, int itemId) {
     // create sql statement, we need to select item amount from inventory table
     stringstream sql;  
     sql << "SELECT DESCRIPTION FROM ITEM WHERE "
-            "ITEMID= " << itemId << ";";
+            "ITEM_ID= " << itemId << ";";
 
     // execute sql statement and get the result set    
     result ItemRes( N.exec(sql.str()));
@@ -116,8 +116,8 @@ void addInventory(connection * C, int whID, int count, int productId) {
     work W(*C);
     stringstream sql;
 
-    sql << "UPDATE INVENTORY set ITEMAMOUNT = INVENTORY.ITEMAMOUNT+" << count << 
-    ", VERSION = INVENTORY.VERSION+1" << " WHERE ITEMID= " << productId << "AND WHID= " << whID <<";";
+    sql << "UPDATE INVENTORY set ITEM_AMOUNT = INVENTORY.ITEM_AMOUNT+" << count << 
+    ", VERSION = INVENTORY.VERSION+1" << " WHERE ITEM_ID= " << productId << "AND WH_ID= " << whID <<";";
 
     W.exec(sql.str());
     W.commit();    
@@ -144,8 +144,8 @@ void decreaseInventory(connection * C, int whID, int count, int productId, int v
     work W(*C);
     stringstream sql;
 
-    sql << "UPDATE INVENTORY set ITEMAMOUNT = INVENTORY.ITEMAMOUNT+" << count << 
-    ", VERSION = INVENTORY.VERSION+1" << " WHERE ITEMID= " << productId << " AND WHID= " << whID << " AND VERSION= "<< version << ";";
+    sql << "UPDATE INVENTORY set ITEM_AMOUNT = INVENTORY.ITEM_AMOUNT+" << count << 
+    ", VERSION = INVENTORY.VERSION+1" << " WHERE ITEM_ID= " << productId << " AND WH_ID= " << whID << " AND VERSION= "<< version << ";";
 
     result Updates(W.exec(sql.str()));
     result::size_type rows = Updates.affected_rows();
