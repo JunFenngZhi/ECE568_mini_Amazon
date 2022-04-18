@@ -62,9 +62,9 @@ void processOrder(const Order & order) {
         
         // keep sending until get acked.
         while (1) {  
-          worldQueue.push(ac);
+          Server::worldQueue.push(ac);
           this_thread::sleep_for(std::chrono::milliseconds(1000));
-          if (seqNumTable[seqNum] == true)
+          if (Server::seqNumTable[seqNum] == true)
             break;
         }
         break;
