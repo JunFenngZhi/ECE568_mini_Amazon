@@ -2,8 +2,8 @@ GDB = -g
 THREAD = -pthread
 PQXX = -lpqxx -lpq
 GPB = `pkg-config --cflags --libs protobuf`
-PROTO_CC = ./protobuf/world_amazon.pb.cc
-PROTO_H = ./protobuf/world_amazon.pb.h
+PROTO_CC = ./protobuf/world_amazon.pb.cc  ./protobuf/AUprotocolV3.pb.cc
+PROTO_H = ./protobuf/world_amazon.pb.h ./protobuf/AUprotocolV3.pb.h
 VERSION = -std=c++11
 
 all: server

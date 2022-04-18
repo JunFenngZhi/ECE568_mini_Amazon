@@ -1,9 +1,23 @@
 #include "Server.h"
 
+#include "OrderProcess.h"
 #include "protobufCommunication.hpp"
 #include "socket.h"
 #include "sql_function.h"
-#include "OrderProcess.h"
+
+/* ------------------------ "server singleton pattern" ------------------------ */
+Ptr Server::m_instance_ptr = nullptr;
+mutex Server::m_mutex;
+
+Ptr Server::get_instance() {
+  if (m_instance_ptr == nullptr) {
+    std::lock_guard<std::mutex> lk(m_mutex);
+    if (m_instance_ptr == nullptr) {
+      m_instance_ptr = std::shared_ptr<Server>(new Server);
+    }
+  }
+  return m_instance_ptr;
+}
 
 /* ------------------------ "server initialize functions" ------------------------ */
 Server::Server() {

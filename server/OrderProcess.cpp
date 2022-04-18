@@ -12,8 +12,6 @@ void parseOrder(string msg) {
   Server::disConnectDB(C.get());
 
   processOrder(order);
-
- 
 }
 
 /*
@@ -41,10 +39,11 @@ void processOrder(const Order & order) {
         return;
       }
       else {
+        Ptr server = Server::get_instance();
         // save order
-        Server::order_lck.lock();
-        Server::orderQueue.push(order);
-        Server::order_lck.unlock();
+        server->order_lck.lock();
+        server->orderQueue.push(order);
+        server->order_lck.unlock();
 
         // create APurchasemore command
         ACommands ac;
@@ -61,9 +60,9 @@ void processOrder(const Order & order) {
         ap->set_seqnum(seqNum);
         Server::curSeqNum++;
         Server::seqNum_lck.unlock();
-        
+
         // keep sending until get acked.
-        while (1) {  
+        while (1) {
           Server::worldQueue.push(ac);
           this_thread::sleep_for(std::chrono::milliseconds(1000));
           if (Server::seqNumTable[seqNum] == true)
@@ -129,7 +128,6 @@ void processPurchaseMore(APurchaseMore r) {
   Server::order_lck.unlock();
 
   processOrder(order);
-  
 }
 
 /*
@@ -152,4 +150,3 @@ void processPacked(APacked r) {
 */
 void processLoaded(ALoaded r) {
 }
-

@@ -1,7 +1,7 @@
 #include"Server.h"
 
 int main(){
-    Server s;
-    s.run();
+    Ptr server = Server::get_instance();
+    server->run();
     return 0;
 }
