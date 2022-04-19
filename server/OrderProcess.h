@@ -9,5 +9,6 @@ void processOrder(const Order& order);
 void processPurchaseMore(APurchaseMore r);
 void processPacked(APacked r);
 void processLoaded(ALoaded r);
-
+void pushWorldQueue(ACommands acommand, int seqNum);
+void pushUpsQueue(AUCommand aucommand, int seqNum);
 #endif

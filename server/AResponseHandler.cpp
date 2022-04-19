@@ -33,6 +33,7 @@ AResponseHandler::AResponseHandler(const AResponses & r) {
 */
 bool checkExecutedAndRecordIt(int seqNum) {
   // check whether this response has been executed
+
   Server::Ptr server = Server::get_instance();
   auto it = server->executeTable_World.find(seqNum);
 
@@ -53,8 +54,10 @@ void AResponseHandler::handle() {
   // ACK responses to world.
   ACommands ac;
   for (int i = 0; i < seqNums.size(); i++) {
+    ac.add_acks(i);
     ac.set_acks(i, seqNums[i]);
   }
+  
   Server::Ptr server = Server::get_instance();
   server->worldQueue.push(ac);
 
