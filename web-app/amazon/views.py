@@ -19,10 +19,13 @@ def index_view(request):
         ProductAmt = request.POST['Amount']
         ProductID = request.POST['ID']
         ProductPrice = request.POST['Price']
+        ProductDescription = request.POST['Description']
         UPsId = request.POST['UPS_ID']
+
         # concatenate order information
         OrderInfo = ProductAddrX + ':' + ProductAddrY + ':' + \
-            ProductAmt + ':' + ProductID + ':' + ProductPrice + ':' + UPsId
+            ProductAmt + ':' + ProductID + ':' + ProductPrice + \
+            ':' + ProductDescription + ':' + UPsId
         # For test orderInfo
         print('OrderInfo is: ' + OrderInfo)
 

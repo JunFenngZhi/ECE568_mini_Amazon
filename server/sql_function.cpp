@@ -38,6 +38,17 @@ void dropAllTable(connection* C) {
 }
 
 
+void setTableDefaultValue(connection* C){
+    work W(*C);
+    string sql =
+        "ALTER TABLE orders ALTER COLUMN version SET DEFAULT 1;ALTER TABLE inventory ALTER COLUMN version SET DEFAULT 1;"
+        "ALTER TABLE item ALTER COLUMN version SET DEFAULT 1;ALTER TABLE orders ALTER COLUMN time SET DEFAULT CURRENT_TIME (0);"
+        "ALTER TABLE orders ALTER COLUMN status set DEFAULT 'packing';";
+    W.exec(sql);
+    W.commit();
+    cout << "set orders, inventory, item tables version column default value 1, and orders time column as now" << endl;
+}
+
 /*
     Check the order item amount in the inventory table, return boolean
     True means: enough inventory, False means: not enough inventory
@@ -54,7 +65,12 @@ bool checkInventory(connection * C, int itemId, int itemAmount, int whID, int & 
     // execute sql statement and get the result set    
     result InventoryRes( N.exec(sql.str()));
 
-    // we need to get inventory item amount from result R
+    // first we need to check if the result set is empty
+    if(InventoryRes.size() == 0) {
+        return false;
+    }
+
+    // Then we need to get inventory item amount from result R
     int inventoryAmt = InventoryRes[0][0].as<int>();
     // get the version from the table and change it
     version = InventoryRes[0][1].as<int>();
@@ -68,12 +84,44 @@ bool checkInventory(connection * C, int itemId, int itemAmount, int whID, int & 
     
 }
 
+void saveItemInDB(connection* C, const Order & order) {
+    //first we need to check if there exists this item in table
+    work W(*C);
+    int itemid = order.getItemId();
+    float item_price = order.getPrice();
+    string item_description = order.getDescription();
+
+    // create sql statement, we need to select item amount from inventory table
+    stringstream sql;  
+    sql << "SELECT * FROM ITEM WHERE "
+            "ITEM_ID= " << itemid << ";";
+
+    result ItemRes(W.exec(sql.str()));
+    if(ItemRes.size() == 0) {
+        sql.clear();
+        sql << "INSERT INTO ITEM (ITEM_ID, DESCRIPTION, PRICE) "
+            "VALUES(" << itemid << ", " << item_description << ", " << item_price << ");";
+        W.exec(sql.str());
+        W.commit();
+    } else {
+        return;
+    }
+
+
+    
+}
 
 
 /*
     get orderInfo from the front end, and save this order into the database
 */
 void saveOrderInDB(connection* C, const Order & order) {
+    // first set default value for the tables
+    setTableDefaultValue(C);
+    //Then we need to save item in item table if it not exist
+    saveItemInDB(C, order);
+  
+    //finally we need to save order in the order table
     work W(*C);
     stringstream sql;
     int addrx = order.getAddressX();
@@ -81,9 +129,10 @@ void saveOrderInDB(connection* C, const Order & order) {
     int amount = order.getAmount();
     int upsid = order.getUPSId();
     int itemid = order.getItemId();
-    float price = order.getPrice();
-    sql << "INSERT INTO ORDER (ADDR_X, ADDR_Y, AMOUNT, UPS_ID, ITEM_ID, PRICE) "
-            "VALUES(" << addrx << ", " << addry << ", " << amount << ", " << upsid << ", " << itemid << ", " << price << ");";
+    float item_price = order.getPrice();
+    float total_price = item_price * amount;
+    sql << "INSERT INTO ORDERS (ADDR_X, ADDR_Y, AMOUNT, UPS_ID, ITEM_ID, PRICE) "
+            "VALUES(" << addrx << ", " << addry << ", " << amount << ", " << upsid << ", " << itemid << ", " << total_price << ");";
 
     W.exec(sql.str());
     W.commit();
@@ -113,14 +162,29 @@ string getDescription(connection * C, int itemId) {
     add inventory of the product in the warehouse and update the version id of the inventory
 */
 void addInventory(connection * C, int whID, int count, int productId) {
+
+    //check if inventory exist this item, if not exist, we need to insert, else we need upadte
     work W(*C);
-    stringstream sql;
+    stringstream sql;  
+    sql << "SELECT * FROM INVENTORY WHERE "
+            "ITEM_ID= " << productId << ";";
 
-    sql << "UPDATE INVENTORY set ITEM_AMOUNT = INVENTORY.ITEM_AMOUNT+" << count << 
-    ", VERSION = INVENTORY.VERSION+1" << " WHERE ITEM_ID= " << productId << "AND WH_ID= " << whID <<";";
+    result ItemRes(W.exec(sql.str()));
+    if(ItemRes.size() == 0) {
+        sql.clear();
+        sql << "INSERT INTO INVENTORY (ITEM_ID, ITEM_AMOUNT, WH_ID) "
+            "VALUES(" << productId << ", " << count << ", " << whID << ");";
 
-    W.exec(sql.str());
-    W.commit();    
+        W.exec(sql.str());
+        W.commit();
+    } else {
+        sql.clear();
+        sql << "UPDATE INVENTORY set ITEM_AMOUNT = INVENTORY.ITEM_AMOUNT+" << count << 
+        ", VERSION = INVENTORY.VERSION+1" << " WHERE ITEM_ID= " << productId << "AND WH_ID= " << whID <<";";
+
+        W.exec(sql.str());
+        W.commit();  
+    }      
 }
 
 

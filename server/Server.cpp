@@ -30,7 +30,8 @@ Server::Server() {
   n_warehouse = 9;  // should be an odd number for symetric
   wh_distance = 20;
   webPortNum = "9999";
-  worldHostName = "vcm-25941.vm.duke.edu";
+  worldHostName = "vcm-24822.vm.duke.edu"; // for changhao testing
+  //worldHostName = "vcm-25941.vm.duke.edu"; //for junfeng testing
   worldPortNum = "12345";
   upsHostName = "0.0.0.0";
   upsPortNum = "8888";
@@ -48,7 +49,9 @@ void Server::run() {
   try {
     //getWorldIDFromUPS();
     initializeWorld();
-    thread tI(&Server::keepReceivingMsg, this);
+    //thread tI(&Server::keepReceivingMsg, this);
+    thread tI_world(&Server::keepReceivingMsgFromWorld, this);
+    thread tI_ups(&Server::keepReceivingMsgFromUps, this);
     thread tO_world(&Server::keepSendingMsgToWorld, this);
     thread tO_ups(&Server::keepSendingMsgToUps, this);
     acceptOrderRequest();
@@ -105,7 +108,7 @@ void Server::initializeWorld() {
       w2->set_x(-1 * 0.707 * wh_distance * i);
       w2->set_y(-1 * 0.707 * wh_distance * i);
       whList.push_back(
-          Warehouse(-1 * 0.707 * wh_distance * i, -1 * 0.707 * wh_distance * i, i));
+          Warehouse(-1 * 0.707 * wh_distance * i, -1 * 0.707 * wh_distance * i, i + n_warehouse / 2));
     }
   }
   if (worldID != -1) {
@@ -186,10 +189,10 @@ void Server::acceptOrderRequest() {
 */
 connection * Server::connectDB(string dbName, string userName, string password) {
   //mtx_server.lock();
-  //connection * C = new connection("dbname=" + dbName + " user=" + userName + " password=" + password);   // use in real sys
-  connection * C =
-      new connection("host=db port=5432 dbname=" + dbName + " user=" + userName +
-                     " password=" + password);  // use in docker
+  connection * C = new connection("dbname=" + dbName + " user=" + userName + " password=" + password);   // use in real sys
+  // connection * C =
+  //     new connection("host=db port=5432 dbname=" + dbName + " user=" + userName +
+  //                    " password=" + password);  // use in docker
   if (C->is_open()) {
     cout << "Opened database successfully: " << C->dbname() << endl;
   }
@@ -220,49 +223,96 @@ void Server::disConnectDB(connection * C) {
 /*
   using select() function to keep receiving message from world and ups.
 */
-void Server::keepReceivingMsg() {
+// void Server::keepReceivingMsg() {
+ 
+//   unique_ptr<socket_in> world_in(new socket_in(world_fd));
+//   unique_ptr<socket_in> ups_in(new socket_in(ups_fd));
+
+//   vector<int> allSockets = {ups_fd, world_fd};
+//   int maxFd = *max_element(allSockets.begin(), allSockets.end());
+  
+//   fd_set read_fds;  // only need to monitor reading events
+//   // //set fd_set
+//   // fd_set allFds;
+//   // fd_set read_fds;  // only need to monitor reading events
+//   // FD_ZERO(&allFds);
+//   // FD_ZERO(&read_fds);
+//   // for (auto fd : allSockets) {
+//   //   FD_SET(fd, &allFds);
+//   // }
+  
+//   //keep listening
+//   while (1) {
+    
+//     /* modify here */
+//     FD_ZERO(&read_fds);
+//     for (auto fd : allSockets) {
+//      FD_SET(fd, &read_fds);
+//    }
+//     //read_fds = allFds;  // reset read_fds
+//     int ret = select(maxFd + 1, &read_fds, NULL, NULL, NULL);
+ 
+//     if (ret < 0) {
+
+//       continue;
+//       //throw MyException("Fail to select!\n");
+//     }
+
+//     if (FD_ISSET(world_fd, &read_fds)) {
+//       AResponses r;
+//       if (recvMesgFrom<AResponses>(r, world_in.get()) == false) {
+//         throw MyException("fail to recv AResponses from world.");
+//       }
+//       cout<<"*********TEST*********"<<endl;
+//       cout<<"before handle world response"<<endl;
+//       AResponseHandler h(r);
+//       h.handle();
+//     }
+
+//     if (FD_ISSET(ups_fd, &read_fds)) {
+//       AUResponse r;
+//       if (recvMesgFrom<AUResponse>(r, ups_in.get()) == false) {
+//         throw MyException("fail to recv AUResponse from ups.");
+//       }
+//       // AUResponseHandler h(r);
+//     }
+//   }
+// }
+
+
+void Server::keepReceivingMsgFromWorld(){
   unique_ptr<socket_in> world_in(new socket_in(world_fd));
-  unique_ptr<socket_in> ups_in(new socket_in(ups_fd));
 
-  vector<int> allSockets = {ups_fd, world_fd};
-  int maxFd = *max_element(allSockets.begin(), allSockets.end());
-
-  //set fd_set
-  fd_set allFds;
-  fd_set read_fds;  // only need to monitor reading events
-  FD_ZERO(&allFds);
-  FD_ZERO(&read_fds);
-  for (auto fd : allSockets) {
-    FD_SET(fd, &allFds);
-  }
-
-  //keep listening
-  while (1) {
-    read_fds = allFds;  // reset read_fds
-
-    int ret = select(maxFd + 1, &read_fds, NULL, NULL, NULL);
-    if (ret < 0) {
-      throw MyException("Fail to select!\n");
-    }
-
-    if (FD_ISSET(world_fd, &read_fds)) {
+  while(1){
       AResponses r;
       if (recvMesgFrom<AResponses>(r, world_in.get()) == false) {
+        continue;
         throw MyException("fail to recv AResponses from world.");
       }
+      cout<<"*********TEST*********"<<endl;
+      cout<<"before handle world response"<<endl;
       AResponseHandler h(r);
       h.handle();
-    }
-
-    if (FD_ISSET(ups_fd, &read_fds)) {
-      AUResponse r;
-      if (recvMesgFrom<AUResponse>(r, ups_in.get()) == false) {
-        throw MyException("fail to recv AUResponse from ups.");
-      }
-      // AUResponseHandler h(r);
-    }
   }
 }
+
+void Server::keepReceivingMsgFromUps(){
+  unique_ptr<socket_in> ups_in(new socket_in(ups_fd));
+
+   while(1){
+      AResponses r;
+      if (recvMesgFrom<AResponses>(r, ups_in.get()) == false) {
+        continue;
+        throw MyException("fail to recv AResponses from up.");
+      }
+      cout<<"*********TEST*********"<<endl;
+      cout<<"before handle ups response"<<endl;
+      AResponseHandler h(r);
+      h.handle();
+   }
+    
+}
+
 
 /*
   keep sending message from worldQueue to world. this function will block when
@@ -270,6 +320,8 @@ void Server::keepReceivingMsg() {
 */
 void Server::keepSendingMsgToWorld() {
   unique_ptr<socket_out> out(new socket_out(world_fd));
+
+  cout<<"****TEST FOR sending APurchaseMore*****"<<endl;
   while (1) {
     ACommands msg;
     worldQueue.wait_and_pop(msg);

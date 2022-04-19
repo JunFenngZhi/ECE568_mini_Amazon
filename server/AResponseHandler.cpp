@@ -3,6 +3,7 @@
 #include "OrderProcess.h"
 
 AResponseHandler::AResponseHandler(const AResponses & r) {
+  cout<<"**********TEST in AResponseHandler Constructor********"<<endl;
   for (int i = 0; i < r.arrived_size(); i++) {
     apurchasemores.push_back(std::move(r.arrived(i)));
     seqNums.push_back(r.arrived(i).seqnum());
@@ -33,6 +34,7 @@ AResponseHandler::AResponseHandler(const AResponses & r) {
 */
 bool checkExecutedAndRecordIt(int seqNum) {
   // check whether this response has been executed
+
   Server::Ptr server = Server::get_instance();
   auto it = server->executeTable_World.find(seqNum);
 
@@ -53,13 +55,17 @@ void AResponseHandler::handle() {
   // ACK responses to world.
   ACommands ac;
   for (int i = 0; i < seqNums.size(); i++) {
+    cout<<"before set acks"<<endl;
+    ac.add_acks(i);
     ac.set_acks(i, seqNums[i]);
   }
+  
   Server::Ptr server = Server::get_instance();
   server->worldQueue.push(ac);
 
   // use different threads to handle different responses.
   for (auto r : apurchasemores) {
+    
     if (checkExecutedAndRecordIt(r.seqnum()) == false) {
       thread t(processPurchaseMore, r);
       t.detach();

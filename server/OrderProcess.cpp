@@ -28,10 +28,16 @@ void processOrder(const Order & order) {
   while (1) {
     try {
       // check inventory
+      cout<<"******TEST*******" <<endl;
+      cout<<"In process order" <<endl;
       int itemId = order.getItemId();
       int itemAmt = order.getAmount();
       int version = -1;
+
+      cout<<"******TEST*******" <<endl;
+      cout<<"before checkInventory" <<endl;
       bool isEnough = checkInventory(C.get(), itemId, itemAmt, whIndex, version);
+      cout<<"after checkInventory" <<endl;
       if (isEnough == true) {
         decreaseInventory(C.get(), whIndex, -1 * itemAmt, itemId, version);
         Server::disConnectDB(C.get());
@@ -61,6 +67,9 @@ void processOrder(const Order & order) {
         server->seqNum_lck.unlock();
 
         // keep sending until get acked.
+        cout<<"******TEST*******" <<endl;
+        cout<<"before send APurchaseMore Command" <<endl;
+        cout<<"This is APurchaseMore seqNum " <<server->curSeqNum<<endl;
         while (1) {
           server->worldQueue.push(ac);
           this_thread::sleep_for(std::chrono::milliseconds(1000));

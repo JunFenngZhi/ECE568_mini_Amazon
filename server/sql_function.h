@@ -17,5 +17,7 @@ bool checkInventory(connection* C, int itemId, int itemAmount, int whID, int& ve
 void addInventory(connection * C, int whID, int count, int productId);
 void decreaseInventory(connection * C, int whID, int count, int productId, int version);
 string getDescription(connection * C, int itemId);
+void saveItemInDB(connection* C, const Order & order);
 void saveOrderInDB(connection* C, const Order & order);
+void setTableDefaultValue(connection* C);
 #endif

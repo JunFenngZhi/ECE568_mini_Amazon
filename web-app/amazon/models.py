@@ -5,28 +5,26 @@ from django.utils.timezone import now
 
 # Create your models here.
 
-# 将itemId和seller做成复合主键？
-
 
 class Item(models.Model):
     item_id = models.IntegerField(primary_key=True)
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, null=True)
     description = models.CharField(
-        max_length=100, blank=False, null=False, unique=True)
+        max_length=100, null=True, unique=True)
     price = models.FloatField(max_length=1000, blank=False, null=False)
-    catalog = models.CharField(max_length=100)
-    seller = models.CharField(max_length=100)
-    version = models.IntegerField(default=1)  # need default value.
+    catalog = models.CharField(max_length=100, null=True)
+    seller = models.CharField(max_length=100, null=True)
+    version = models.IntegerField()  # need default value.
 
     class Meta:
         db_table = 'item'
 
 
 class Order(models.Model):
-    pack_id = models.IntegerField(primary_key=True)
+    pack_id = models.AutoField(primary_key=True)
     addr_x = models.IntegerField()
     addr_y = models.IntegerField()
-    time = models.DateTimeField(default=now)
+    time = models.TimeField()
     STATUS_CHOICES = [
         ('PACKING', 'packing'),
         ('PACKED', 'packed'),
@@ -41,17 +39,17 @@ class Order(models.Model):
     ups_id = models.IntegerField()
     item = models.ForeignKey(Item, on_delete=models.SET_NULL, null=True)
     price = models.FloatField(max_length=1000)
-    version = models.IntegerField(default=1)  # need default value.
+    version = models.IntegerField()  # need default value.
 
     class Meta:
-        db_table = 'order'
+        db_table = 'orders'
 
 
 class Inventory(models.Model):
     item = models.ForeignKey(Item, on_delete=models.SET_NULL, null=True)
     item_amount = models.IntegerField()
     wh_id = models.IntegerField()
-    version = models.IntegerField(default=1)  # need default value.
+    version = models.IntegerField()  # need default value.
 
     class Meta:
         unique_together = ["item", "wh_id"]

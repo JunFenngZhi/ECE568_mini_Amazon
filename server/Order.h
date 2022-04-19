@@ -14,6 +14,7 @@ class Order {
   int amount;
   int item_id;
   float price;
+  string item_description;
   int UPS_ID;
 
  public:
@@ -34,17 +35,18 @@ class Order {
     }
     //Because the UPSID is optional, we need to judge if the UPSID is exists
     //if not exists, we set UPS_ID as -1 to indicate that
-    if (res[5] == "") {
+    if (res[6] == "") {
       UPS_ID = -1;
     }
     else {
-      UPS_ID = stoi(res[5]);
+      UPS_ID = stoi(res[6]);
     }
     address_x = stoi(res[0]);
     address_y = stoi(res[1]);
     amount = stoi(res[2]);
     item_id = stoi(res[3]);
     price = stof(res[4]);
+    item_description = res[5];
   }
   int getAddressX() const { return address_x; }
   int getAddressY() const { return address_y; }
@@ -52,6 +54,7 @@ class Order {
   int getItemId() const { return item_id; }
   float getPrice() const { return price; }
   int getUPSId() const { return UPS_ID; }
+  string getDescription() const {return item_description; }
 };
 
 #endif

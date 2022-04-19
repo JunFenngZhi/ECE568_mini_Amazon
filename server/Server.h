@@ -12,6 +12,7 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include <errno.h>
 
 #include "./protobuf/AUprotocolV3.pb.h"
 #include "./protobuf/world_amazon.pb.h"
@@ -46,9 +47,11 @@ class Server {
   void acceptOrderRequest();
   void initializeWorld();
   void getWorldIDFromUPS();
-  void keepReceivingMsg();
+  //void keepReceivingMsg();
   void keepSendingMsgToWorld();
   void keepSendingMsgToUps();
+  void keepReceivingMsgFromUps();
+  void keepReceivingMsgFromWorld();
 
  private:
   string webPortNum;
