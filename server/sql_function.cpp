@@ -115,7 +115,7 @@ void saveItemInDB(connection* C, const Order & order) {
 /*
     get orderInfo from the front end, and save this order into the database
 */
-void saveOrderInDB(connection* C, const Order & order) {
+void saveOrderInDB(connection* C, Order & order) {
     // first set default value for the tables
     setTableDefaultValue(C);
     //Then we need to save item in item table if it not exist
@@ -135,6 +135,14 @@ void saveOrderInDB(connection* C, const Order & order) {
             "VALUES(" << addrx << ", " << addry << ", " << amount << ", " << upsid << ", " << itemid << ", " << total_price << ");";
 
     W.exec(sql.str());
+
+    //???????
+    //get pack_id for the current order, and set the pack_id field for this order
+    sql.clear();
+    sql << "SELECT PACK_ID FROM ORDERS ORDER BY PACK_ID DESC LIMIT 1;";
+    result orderRes(W.exec(sql.str()));
+    int packageId = orderRes[0][0].as<int>();
+    order.setPackId(packageId);
     W.commit();
 }
 
@@ -155,6 +163,11 @@ string getDescription(connection * C, int itemId) {
     result ItemRes( N.exec(sql.str()));
     string description = ItemRes[0][0].as<string>();
     return description;
+}
+
+int getPackId(connection * C) {
+
+
 }
 
 
@@ -192,13 +205,12 @@ void addInventory(connection * C, int whID, int count, int productId) {
     update specific order status to be 'packed'
 */
 void updatePacked(connection * C, int packageId) {
-    // work W(*C);
-    // stringstream sql;
-    // sql << "UPDATE ORDER set STATUS= " << W.quote("packed") << "WHERE PACKID= " << packageId << ";";
+     work W(*C);
+     stringstream sql;
+     sql << "UPDATE ORDERS set STATUS= " << W.quote("packed") << "WHERE PACK_ID= " << packageId << ";";
 
-    // W.exec(sql.str());
-    // W.commit();    
-
+     W.exec(sql.str());
+     W.commit();    
 }
 
 /*

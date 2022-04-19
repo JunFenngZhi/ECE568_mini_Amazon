@@ -280,33 +280,32 @@ void Server::disConnectDB(connection * C) {
 // }
 
 
+/* ------------------------ "IO Functions" ------------------------ */
+/*
+  keep receiving response from the world.
+*/
 void Server::keepReceivingMsgFromWorld(){
   unique_ptr<socket_in> world_in(new socket_in(world_fd));
-
   while(1){
       AResponses r;
       if (recvMesgFrom<AResponses>(r, world_in.get()) == false) {
         continue;
-        throw MyException("fail to recv AResponses from world.");
       }
-      cout<<"*********TEST*********"<<endl;
-      cout<<"before handle world response"<<endl;
       AResponseHandler h(r);
       h.handle();
   }
 }
 
+/*
+  keep receiving response from the ups. 
+*/
 void Server::keepReceivingMsgFromUps(){
   unique_ptr<socket_in> ups_in(new socket_in(ups_fd));
-
    while(1){
       AResponses r;
       if (recvMesgFrom<AResponses>(r, ups_in.get()) == false) {
         continue;
-        throw MyException("fail to recv AResponses from up.");
       }
-      cout<<"*********TEST*********"<<endl;
-      cout<<"before handle ups response"<<endl;
       AResponseHandler h(r);
       h.handle();
    }
@@ -320,8 +319,6 @@ void Server::keepReceivingMsgFromUps(){
 */
 void Server::keepSendingMsgToWorld() {
   unique_ptr<socket_out> out(new socket_out(world_fd));
-
-  cout<<"****TEST FOR sending APurchaseMore*****"<<endl;
   while (1) {
     ACommands msg;
     worldQueue.wait_and_pop(msg);

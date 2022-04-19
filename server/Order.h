@@ -16,6 +16,7 @@ class Order {
   float price;
   string item_description;
   int UPS_ID;
+  int pack_id;
 
  public:
   Order() {}
@@ -55,6 +56,9 @@ class Order {
   float getPrice() const { return price; }
   int getUPSId() const { return UPS_ID; }
   string getDescription() const {return item_description; }
+  void setPackId(int packid) {pack_id = packid;}
+  //???????
+  int getPackId() const {return pack_id;}
 };
 
 #endif

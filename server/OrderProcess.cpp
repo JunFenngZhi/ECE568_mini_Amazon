@@ -28,20 +28,67 @@ void processOrder(const Order & order) {
   while (1) {
     try {
       // check inventory
-      cout<<"******TEST*******" <<endl;
-      cout<<"In process order" <<endl;
       int itemId = order.getItemId();
       int itemAmt = order.getAmount();
+      int packageId = order.getPackId();
+      int upsid = order.getUPSId();
       int version = -1;
-
-      cout<<"******TEST*******" <<endl;
-      cout<<"before checkInventory" <<endl;
       bool isEnough = checkInventory(C.get(), itemId, itemAmt, whIndex, version);
-      cout<<"after checkInventory" <<endl;
       if (isEnough == true) {
         decreaseInventory(C.get(), whIndex, -1 * itemAmt, itemId, version);
         Server::disConnectDB(C.get());
-        //create new thread to begin packing and order a truck
+        //TODO:
+        //create new thread to begin sending APack Command to the world and AOrderATruck to the UPS
+        
+        // 1.create APack Command
+        ACommands acommand;
+        APack * apack = acommand.add_topack();
+        apack->set_whnum(whIndex);
+        //????????
+        apack->set_shipid(packageId);
+        AProduct * aproduct = apack->add_things();
+        aproduct->set_id(itemId);
+        aproduct->set_count(itemAmt);
+        aproduct->set_description(getDescription(C.get(), itemId));
+
+        // add seqNum to this command.
+        Server::Ptr server = Server::get_instance();
+        server->seqNum_lck.lock();
+        int seqNum = server->curSeqNum;
+        apack->set_seqnum(seqNum);
+        server->curSeqNum++;
+        server->seqNum_lck.unlock();
+        thread t_sendAPack(pushWorldQueue,acommand,seqNum);
+
+
+
+        // 2.create AOrderATruck Command
+        AUCommand aucommand; 
+        AOrderATruck * aOrderTruck = aucommand.add_order();
+        vector<Warehouse> whList = server->getWhList();
+        Warehouse wh = whList[whIndex];
+        int whouse_x = wh.getX();
+        int whouse_y = wh.getY();
+        int dest_x = order.getAddressX();
+        int dest_y = order.getAddressY();
+
+        //??????????
+        aOrderTruck->set_packageid(packageId);
+        aOrderTruck->set_warehouselocationx(whouse_x);
+        aOrderTruck->set_warehouselocationy(whouse_y);
+        aOrderTruck->set_destinationx(dest_x);
+        aOrderTruck->set_destinationy(dest_y);
+        if(upsid != -1) {
+          aOrderTruck->set_upsid(upsid);
+        }
+        // add seqNum to this command.
+        Server::Ptr server = Server::get_instance();
+        server->seqNum_lck.lock();
+        int seqNum = server->curSeqNum;
+        apack->set_seqnum(seqNum);
+        server->curSeqNum++;
+        server->seqNum_lck.unlock();
+        thread t_sendAOrderAtruck(pushUpsQueue, aucommand, seqNum);
         return;
       }
       else {
@@ -67,9 +114,6 @@ void processOrder(const Order & order) {
         server->seqNum_lck.unlock();
 
         // keep sending until get acked.
-        cout<<"******TEST*******" <<endl;
-        cout<<"before send APurchaseMore Command" <<endl;
-        cout<<"This is APurchaseMore seqNum " <<server->curSeqNum<<endl;
         while (1) {
           server->worldQueue.push(ac);
           this_thread::sleep_for(std::chrono::milliseconds(1000));
@@ -86,6 +130,29 @@ void processOrder(const Order & order) {
 
   Server::disConnectDB(C.get());
 }
+
+void pushWorldQueue(ACommands acommand, int seqNum) {
+    Server::Ptr server = Server::get_instance();
+    while (1) {
+          server->worldQueue.push(acommand);
+          this_thread::sleep_for(std::chrono::milliseconds(1000));
+          if (server->seqNumTable[seqNum] == true)
+            break;
+        }
+}
+
+void pushUpsQueue(AUCommand aucommand, int seqNum) {
+  Server::Ptr server = Server::get_instance();
+    while (1) {
+          server->upsQueue.push(aucommand);
+          this_thread::sleep_for(std::chrono::milliseconds(1000));
+          if (server->seqNumTable[seqNum] == true)
+            break;
+        }
+}
+
+
+
 
 /*
   select a warehouse, which is closest to the order address. return the selected warehouse index.
@@ -105,6 +172,8 @@ int selectWareHouse(const Order & order) {
   }
   return index;
 }
+
+
 
 /*
     create new thread, let it to process PurchaseMore
@@ -152,6 +221,7 @@ void processPacked(APacked r) {
   int packageId = r.shipid();
 
   //process this order status to be 'packed'
+  updatePacked(C.get(), packageId);
 }
 
 /*

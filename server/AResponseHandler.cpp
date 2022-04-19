@@ -3,7 +3,6 @@
 #include "OrderProcess.h"
 
 AResponseHandler::AResponseHandler(const AResponses & r) {
-  cout<<"**********TEST in AResponseHandler Constructor********"<<endl;
   for (int i = 0; i < r.arrived_size(); i++) {
     apurchasemores.push_back(std::move(r.arrived(i)));
     seqNums.push_back(r.arrived(i).seqnum());
@@ -55,7 +54,6 @@ void AResponseHandler::handle() {
   // ACK responses to world.
   ACommands ac;
   for (int i = 0; i < seqNums.size(); i++) {
-    cout<<"before set acks"<<endl;
     ac.add_acks(i);
     ac.set_acks(i, seqNums[i]);
   }
@@ -65,7 +63,6 @@ void AResponseHandler::handle() {
 
   // use different threads to handle different responses.
   for (auto r : apurchasemores) {
-    
     if (checkExecutedAndRecordIt(r.seqnum()) == false) {
       thread t(processPurchaseMore, r);
       t.detach();

@@ -18,6 +18,7 @@ void addInventory(connection * C, int whID, int count, int productId);
 void decreaseInventory(connection * C, int whID, int count, int productId, int version);
 string getDescription(connection * C, int itemId);
 void saveItemInDB(connection* C, const Order & order);
-void saveOrderInDB(connection* C, const Order & order);
+void saveOrderInDB(connection* C, Order & order);
 void setTableDefaultValue(connection* C);
+void updatePacked(connection * C, int packageId);
 #endif
