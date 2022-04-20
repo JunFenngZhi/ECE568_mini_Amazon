@@ -92,26 +92,18 @@ void saveItemInDB(connection* C, const Order & order) {
     float item_price = order.getPrice();
     string item_description = order.getDescription();
 
-
     // create sql statement, we need to select item amount from inventory table
     stringstream sql;  
-    sql << "SELECT * FROM ITEM WHERE "
-            "ITEM_ID= " << itemid << ";";
-
-    result ItemRes(W.exec(sql.str()));
-    if(ItemRes.size() == 0) {
-        sql.clear();
-        sql << "INSERT INTO ITEM (ITEM_ID, DESCRIPTION, PRICE) "
-            "VALUES(" << itemid << ", " << W.quote(item_description) << ", " << item_price << ");";
-        W.exec(sql.str());
-        W.commit();
-    } else {
-        return;
+    sql << "INSERT INTO ITEM (ITEM_ID, DESCRIPTION, PRICE) "
+    "VALUES(" << itemid << ", " << W.quote(item_description) << ", " << item_price << ")"
+    <<"ON CONFLICT (ITEM_ID) DO NOTHING;";
+    W.exec(sql.str());
+    W.commit();
     }
 
 
     
-}
+
 
 /*
    saveorder into the database,and set package into order member through reference.
@@ -176,26 +168,13 @@ void addInventory(connection * C, int whID, int count, int productId) {
     //check if inventory exist this item, if not exist, we need to insert, else we need upadte
     work W(*C);
     stringstream sql;  
-    sql << "SELECT * FROM INVENTORY WHERE "
-            "ITEM_ID= " << productId << ";";
-
-    result ItemRes(W.exec(sql.str()));
-    if(ItemRes.size() == 0) {
-        sql.clear();
-        sql << "INSERT INTO INVENTORY (ITEM_ID, ITEM_AMOUNT, WH_ID) "
-            "VALUES(" << productId << ", " << count << ", " << whID << ");";
-
-        W.exec(sql.str());
-        W.commit();
-    } else {
-        sql.clear();
-        sql << "UPDATE INVENTORY set ITEM_AMOUNT = INVENTORY.ITEM_AMOUNT+" << count << 
-        ", VERSION = INVENTORY.VERSION+1" << " WHERE ITEM_ID= " << productId << "AND WH_ID= " << whID <<";";
-
+    sql << "INSERT INTO INVENTORY (ITEM_ID, ITEM_AMOUNT, WH_ID) "
+             "VALUES(" << productId << ", " << count << ", " << whID << ") ON CONFLICT (ITEM_ID) DO UPDATE "
+             "set ITEM_AMOUNT = INVENTORY.ITEM_AMOUNT+" << count << ", VERSION = INVENTORY.VERSION+1" << " WHERE ITEM_ID= " << productId << "AND WH_ID= " << whID <<";";
         W.exec(sql.str());
         W.commit();  
     }      
-}
+
 
 /*
     update specific order status to be 'packed'
