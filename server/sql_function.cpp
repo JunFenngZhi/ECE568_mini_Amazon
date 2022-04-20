@@ -38,7 +38,10 @@ void dropAllTable(connection* C) {
     cout << "Drop all the existed table..." << endl;
 }
 
-
+/*
+    set table default value order, item, inventory version as 1
+    and order time as now and order status as packing
+*/
 void setTableDefaultValue(connection* C){
     work W(*C);
     string sql =
@@ -85,6 +88,10 @@ bool checkInventory(connection * C, int itemId, int itemAmount, int whID, int & 
     
 }
 
+
+/*
+   save item into the database, if it already exists do nothing, else insert .
+*/
 void saveItemInDB(connection* C, const Order & order) {
     //first we need to check if there exists this item in table
     work W(*C);
@@ -106,7 +113,7 @@ void saveItemInDB(connection* C, const Order & order) {
 
 
 /*
-   saveorder into the database,and set package into order member through reference.
+   save order into the database,and set package into order member through reference.
 */
 void saveOrderInDB(connection* C, Order & order) {
     //we need to save item in item table if it not exist
@@ -123,18 +130,11 @@ void saveOrderInDB(connection* C, Order & order) {
     float item_price = order.getPrice();
     float total_price = item_price * amount;
     sql << "INSERT INTO ORDERS (ADDR_X, ADDR_Y, AMOUNT, UPS_ID, ITEM_ID, PRICE) "
-            "VALUES(" << addrx << ", " << addry << ", " << amount << ", " << upsid << ", " << itemid << ", " << total_price << ");";
-
-    W.exec(sql.str());
-
-    //get pack_id for the current order, and set the pack_id field for this order
-    sql.clear();
-    sql << "SELECT PACK_ID FROM ORDERS ORDER BY PACK_ID DESC LIMIT 1;";
-    result orderRes(W.exec(sql.str()));
+            "VALUES(" << addrx << ", " << addry << ", " << amount << ", " << upsid << ", " << itemid << ", " << total_price << ");SELECT SCOPE_IDENTITY;";
+    result orderRes = W.exec(sql.str());
     int packageId = orderRes[0][0].as<int>();
     order.setPackId(packageId);
     W.commit();
-    
 }
 
 /*
@@ -162,10 +162,9 @@ int getPackId(connection * C) {
 
 /*
     add inventory of item in the warehouse and update its version id.
+    check if inventory exist this item, if not exist, we need to insert, else we need upadte
 */
 void addInventory(connection * C, int whID, int count, int productId) {
-
-    //check if inventory exist this item, if not exist, we need to insert, else we need upadte
     work W(*C);
     stringstream sql;  
     sql << "INSERT INTO INVENTORY (ITEM_ID, ITEM_AMOUNT, WH_ID) "
