@@ -2,6 +2,7 @@
 #include "exception.h"
 
 
+
 /*
     read sql command from the file and then create tabel using connection *C.
     If fails, it will throw exception.
@@ -91,6 +92,7 @@ void saveItemInDB(connection* C, const Order & order) {
     float item_price = order.getPrice();
     string item_description = order.getDescription();
 
+
     // create sql statement, we need to select item amount from inventory table
     stringstream sql;  
     sql << "SELECT * FROM ITEM WHERE "
@@ -100,7 +102,7 @@ void saveItemInDB(connection* C, const Order & order) {
     if(ItemRes.size() == 0) {
         sql.clear();
         sql << "INSERT INTO ITEM (ITEM_ID, DESCRIPTION, PRICE) "
-            "VALUES(" << itemid << ", " << item_description << ", " << item_price << ");";
+            "VALUES(" << itemid << ", " << W.quote(item_description) << ", " << item_price << ");";
         W.exec(sql.str());
         W.commit();
     } else {
@@ -111,14 +113,11 @@ void saveItemInDB(connection* C, const Order & order) {
     
 }
 
-
 /*
-    get orderInfo from the front end, and save this order into the database
+   saveorder into the database,and set package into order member through reference.
 */
 void saveOrderInDB(connection* C, Order & order) {
-    // first set default value for the tables
-    setTableDefaultValue(C);
-    //Then we need to save item in item table if it not exist
+    //we need to save item in item table if it not exist
     saveItemInDB(C, order);
   
     //finally we need to save order in the order table
@@ -136,7 +135,6 @@ void saveOrderInDB(connection* C, Order & order) {
 
     W.exec(sql.str());
 
-    //???????
     //get pack_id for the current order, and set the pack_id field for this order
     sql.clear();
     sql << "SELECT PACK_ID FROM ORDERS ORDER BY PACK_ID DESC LIMIT 1;";
@@ -144,8 +142,8 @@ void saveOrderInDB(connection* C, Order & order) {
     int packageId = orderRes[0][0].as<int>();
     order.setPackId(packageId);
     W.commit();
+    
 }
-
 
 /*
     get description from the item 
@@ -170,9 +168,8 @@ int getPackId(connection * C) {
 
 }
 
-
 /*
-    add inventory of the product in the warehouse and update the version id of the inventory
+    add inventory of item in the warehouse and update its version id.
 */
 void addInventory(connection * C, int whID, int count, int productId) {
 
@@ -200,7 +197,6 @@ void addInventory(connection * C, int whID, int count, int productId) {
     }      
 }
 
-
 /*
     update specific order status to be 'packed'
 */
@@ -214,13 +210,14 @@ void updatePacked(connection * C, int packageId) {
 }
 
 /*
-    decrease the inventory of the product in the warehouse and check the version id of the inventory
+    decrease inventory of the product in the warehouse and check the version id of the inventory.
+    If version is not matched, throw exception.
 */
 void decreaseInventory(connection * C, int whID, int count, int productId, int version) {
     work W(*C);
     stringstream sql;
 
-    sql << "UPDATE INVENTORY set ITEM_AMOUNT = INVENTORY.ITEM_AMOUNT+" << count << 
+    sql << "UPDATE INVENTORY set ITEM_AMOUNT = INVENTORY.ITEM_AMOUNT-" << count << 
     ", VERSION = INVENTORY.VERSION+1" << " WHERE ITEM_ID= " << productId << " AND WH_ID= " << whID << " AND VERSION= "<< version << ";";
 
     result Updates(W.exec(sql.str()));

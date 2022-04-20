@@ -31,7 +31,7 @@ AResponseHandler::AResponseHandler(const AResponses & r) {
   else return false. If given seqNum is not executed, record it in 
   the executed table.
 */
-bool checkExecutedAndRecordIt(int seqNum) {
+bool AResponseHandler::checkExecutedAndRecordIt(int seqNum) {
   // check whether this response has been executed
 
   Server::Ptr server = Server::get_instance();

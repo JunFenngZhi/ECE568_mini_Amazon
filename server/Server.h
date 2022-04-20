@@ -17,10 +17,12 @@
 #include "./protobuf/AUprotocolV3.pb.h"
 #include "./protobuf/world_amazon.pb.h"
 #include "AResponseHandler.h"
+#include "AUResponseHandler.h"
 #include "Order.h"
 #include "ThreadSafe_queue.h"
 #include "Warehouse.h"
 #include "exception.h"
+#include "sql_function.h"
 
 using namespace std;
 using namespace pqxx;

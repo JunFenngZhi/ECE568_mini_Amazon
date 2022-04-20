@@ -57,7 +57,6 @@ class Order {
   int getUPSId() const { return UPS_ID; }
   string getDescription() const {return item_description; }
   void setPackId(int packid) {pack_id = packid;}
-  //???????
   int getPackId() const {return pack_id;}
 };
 

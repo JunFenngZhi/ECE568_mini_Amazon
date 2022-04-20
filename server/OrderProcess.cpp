@@ -15,6 +15,23 @@ void parseOrder(string msg) {
 }
 
 /*
+  select a warehouse, which is closest to the order address. return the selected warehouse index.
+*/
+int selectWareHouse(const vector<Warehouse>& whList, const Order & order) {
+  int index = -1;
+  int minDistance = INT_MAX;
+  for (int i = 0; i < whList.size(); i++) {
+    int delta_x = abs(whList[i].getX() - order.getAddressX());
+    int delta_y = abs(whList[i].getY() - order.getAddressY());
+    if ((delta_x * delta_x + delta_y * delta_y) < minDistance) {
+      minDistance = delta_x * delta_x + delta_y * delta_y;
+      index = i;
+    }
+  }
+  return index;
+}
+
+/*
   check inventory for the given order. If enough, use different threads to 
   begin packing and ordering a truck. Otherwise, send APurchasemore command to 
   world.
@@ -23,7 +40,9 @@ void processOrder(const Order & order) {
   unique_ptr<connection> C(Server::connectDB("mini_amazon", "postgres", "passw0rd"));
 
   // determine to use which warehouse.
-  int whIndex = selectWareHouse(order);
+  Server::Ptr server = Server::get_instance();
+  vector<Warehouse> whList = server->getWhList();
+  int whIndex = selectWareHouse(whList, order);
 
   while (1) {
     try {
@@ -35,68 +54,22 @@ void processOrder(const Order & order) {
       int version = -1;
       bool isEnough = checkInventory(C.get(), itemId, itemAmt, whIndex, version);
       if (isEnough == true) {
-        decreaseInventory(C.get(), whIndex, -1 * itemAmt, itemId, version);
+        decreaseInventory(C.get(), whIndex, itemAmt, itemId, version);
         Server::disConnectDB(C.get());
-        //TODO:
-        //create new thread to begin sending APack Command to the world and AOrderATruck to the UPS
         
-        // 1.create APack Command
-        ACommands acommand;
-        APack * apack = acommand.add_topack();
-        apack->set_whnum(whIndex);
-        //????????
-        apack->set_shipid(packageId);
-        AProduct * aproduct = apack->add_things();
-        aproduct->set_id(itemId);
-        aproduct->set_count(itemAmt);
-        aproduct->set_description(getDescription(C.get(), itemId));
-
-        // add seqNum to this command.
-        Server::Ptr server = Server::get_instance();
-        server->seqNum_lck.lock();
-        int seqNum = server->curSeqNum;
-        apack->set_seqnum(seqNum);
-        server->curSeqNum++;
-        server->seqNum_lck.unlock();
-        thread t_sendAPack(pushWorldQueue,acommand,seqNum);
-
-
-
-        // 2.create AOrderATruck Command
-        AUCommand aucommand; 
-        AOrderATruck * aOrderTruck = aucommand.add_order();
-        vector<Warehouse> whList = server->getWhList();
-        Warehouse wh = whList[whIndex];
-        int whouse_x = wh.getX();
-        int whouse_y = wh.getY();
-        int dest_x = order.getAddressX();
-        int dest_y = order.getAddressY();
-
-        //??????????
-        aOrderTruck->set_packageid(packageId);
-        aOrderTruck->set_warehouselocationx(whouse_x);
-        aOrderTruck->set_warehouselocationy(whouse_y);
-        aOrderTruck->set_destinationx(dest_x);
-        aOrderTruck->set_destinationy(dest_y);
-        if(upsid != -1) {
-          aOrderTruck->set_upsid(upsid);
-        }
-        // add seqNum to this command.
-        Server::Ptr server = Server::get_instance();
-        server->seqNum_lck.lock();
-        int seqNum = server->curSeqNum;
-        apack->set_seqnum(seqNum);
-        server->curSeqNum++;
-        server->seqNum_lck.unlock();
-        thread t_sendAOrderAtruck(pushUpsQueue, aucommand, seqNum);
+        //create new thread to send APack Command to the world and AOrderATruck to the UPS
+        thread t1(packOrder, order);
+        t1.detach();
+        thread t2(callATruck, order);
+        t2.detach();
         return;
       }
       else {
-        Server::Ptr server = Server::get_instance();
         // save order
         server->order_lck.lock();
         server->orderQueue.push(order);
         server->order_lck.unlock();
+
         // create APurchasemore command
         ACommands ac;
         APurchaseMore * ap = ac.add_buy();
@@ -114,12 +87,7 @@ void processOrder(const Order & order) {
         server->seqNum_lck.unlock();
 
         // keep sending until get acked.
-        while (1) {
-          server->worldQueue.push(ac);
-          this_thread::sleep_for(std::chrono::milliseconds(1000));
-          if (server->seqNumTable[seqNum] == true)
-            break;
-        }
+        pushWorldQueue(ac, seqNum);
         break;
       }
     }
@@ -131,50 +99,107 @@ void processOrder(const Order & order) {
   Server::disConnectDB(C.get());
 }
 
-void pushWorldQueue(ACommands acommand, int seqNum) {
-    Server::Ptr server = Server::get_instance();
-    while (1) {
-          server->worldQueue.push(acommand);
-          this_thread::sleep_for(std::chrono::milliseconds(1000));
-          if (server->seqNumTable[seqNum] == true)
-            break;
-        }
-}
-
-void pushUpsQueue(AUCommand aucommand, int seqNum) {
+/*
+  Send APack command to the world to pack given order.
+*/
+void packOrder(Order order) {
   Server::Ptr server = Server::get_instance();
-    while (1) {
-          server->upsQueue.push(aucommand);
-          this_thread::sleep_for(std::chrono::milliseconds(1000));
-          if (server->seqNumTable[seqNum] == true)
-            break;
-        }
+  unique_ptr<connection> C(Server::connectDB("mini_amazon", "postgres", "passw0rd"));
+
+  vector<Warehouse>whList = server->getWhList();
+  int whIndex = selectWareHouse(whList, order);
+  int whouse_id = whList[whIndex].getID();
+  
+  // create Apack command
+  ACommands acommand;
+  APack * apack = acommand.add_topack();
+  apack->set_whnum(whouse_id);
+  apack->set_shipid(order.getPackId());
+  AProduct * aproduct = apack->add_things();
+  aproduct->set_id(order.getItemId());
+  aproduct->set_count(order.getAmount());
+  aproduct->set_description(getDescription(C.get(), order.getItemId()));
+
+   // add seqNum to this command.
+  server->seqNum_lck.lock();
+  int seqNum = server->curSeqNum;
+  apack->set_seqnum(seqNum);
+  server->curSeqNum++;
+  server->seqNum_lck.unlock();
+
+  Server::disConnectDB(C.get());
+  pushWorldQueue(acommand, seqNum);
+
 }
-
-
-
 
 /*
-  select a warehouse, which is closest to the order address. return the selected warehouse index.
+  Send AOrderATruck command to UPS to assign a truck to delivery the given package.
 */
-int selectWareHouse(const Order & order) {
-  int index = -1;
-  int minDistance = INT_MAX;
+void callATruck(Order order) {
   Server::Ptr server = Server::get_instance();
-  vector<Warehouse> whList = server->getWhList();
-  for (int i = 0; i < whList.size(); i++) {
-    int delta_x = abs(whList[i].getX() - order.getAddressX());
-    int delta_y = abs(whList[i].getY() - order.getAddressY());
-    if ((delta_x * delta_x + delta_y * delta_y) < minDistance) {
-      minDistance = delta_x * delta_x + delta_y * delta_y;
-      index = i;
-    }
+
+  vector<Warehouse>whList = server->getWhList();
+  int whIndex = selectWareHouse(whList, order);
+  
+
+  //create AOrderATruck Command
+  AUCommand aucommand;
+  AOrderATruck * aOrderTruck = aucommand.add_order();
+  int whouse_x = whList[whIndex].getX();
+  int whouse_y = whList[whIndex].getY();
+  int whouse_id = whList[whIndex].getID();
+  int dest_x = order.getAddressX();
+  int dest_y = order.getAddressY();
+  aOrderTruck->set_packageid(order.getPackId());
+  aOrderTruck->set_warehouselocationx(whouse_x);
+  aOrderTruck->set_warehouselocationy(whouse_y);
+  aOrderTruck->set_warehouseid(whouse_id);
+  aOrderTruck->set_destinationx(dest_x);
+  aOrderTruck->set_destinationy(dest_y);
+  if (order.getUPSId() != -1) {
+    aOrderTruck->set_upsid(order.getUPSId());
   }
-  return index;
+
+  // add seqNum to this command.
+  server->seqNum_lck.lock();
+  int seqNum = server->curSeqNum;
+  aOrderTruck->set_seqnum(seqNum);
+  server->curSeqNum++;
+  server->seqNum_lck.unlock();
+
+  pushUpsQueue(aucommand, seqNum);
 }
 
+/* ------------------------ "Message Queue push functions" ------------------------ */
+/*
+  push AUCommand object into queue, and then send it to the UPS.
+  It will keep pushing unitl server receives ack.
+*/
+void pushUpsQueue(const AUCommand & aucommand, int seqNum) {
+  Server::Ptr server = Server::get_instance();
+  while (1) {
+    server->upsQueue.push(aucommand);
+    this_thread::sleep_for(std::chrono::milliseconds(1000));
+    if (server->seqNumTable[seqNum] == true)
+      break;
+  }
+}
 
+/*
+  push ACommand object into queue, and then send it to the world.
+  It will keep pushing unitl server receives ack.
+*/
+void pushWorldQueue(const ACommands & acommand, int seqNum) {
+  Server::Ptr server = Server::get_instance();
+  while (1) {
+    server->worldQueue.push(acommand);
+    this_thread::sleep_for(std::chrono::milliseconds(1000));
+    if (server->seqNumTable[seqNum] == true)
+      break;
+  }
+}
 
+/* ------------------------ "Handle Response from World" ------------------------ */
 /*
     create new thread, let it to process PurchaseMore
     (Go to the database to increase the corresponding product inventory in the corresponding warehouse)
