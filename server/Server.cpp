@@ -23,13 +23,16 @@ Server::Ptr Server::get_instance() {
 /* ------------------------ "server initialize functions" ------------------------ */
 Server::Server() {
   cout << "initialize server configuration...." << endl;
+
   unique_ptr<connection> C(Server::connectDB("mini_amazon", "postgres", "passw0rd"));
   setTableDefaultValue(C.get());
   Server::disConnectDB(C.get());
+
   curSeqNum = 0;
   for (size_t i = 0; i < MAX_SEQNUM; i++) {
     seqNumTable.push_back(false);
   }
+  
   n_warehouse = 9;  // should be an odd number for symetric
   wh_distance = 20;
   webPortNum = "9999";

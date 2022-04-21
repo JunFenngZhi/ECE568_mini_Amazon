@@ -29,13 +29,6 @@ message AUCommand{
 	repeated Err error = 4;
 }
 
-message AUResponse{
-	repeated UTruckArrive arrive = 1;
-	repeated UDelivered delivered = 2;
-	repeated int64 acks = 3;
-	repeated Err error = 4;
-}
-
 
 message UTruckArrive{
 	required int64 packageid  = 1;
@@ -51,13 +44,6 @@ message UDelivered{
 message UACommand{
 	repeated UTruckArrive arrive = 1;
 	repeated UDelivered delivered = 2;
-	repeated int64 acks = 3;
-	repeated Err error = 4;
-}
-
-message UAResponse{
-	repeated AStartDeliver deliver = 1;
-	repeated AOrderATruck order = 2;
 	repeated int64 acks = 3;
 	repeated Err error = 4;
 }
