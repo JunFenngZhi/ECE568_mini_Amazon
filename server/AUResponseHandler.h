@@ -3,7 +3,10 @@
 
 #include "Server.h"
 #include "protobufCommunication.hpp"
+#include "OrderProcess.h"
 #include <vector>
+
+using namespace std;
 
 class AUResponseHandler
 {
@@ -14,7 +17,7 @@ private:
     
 public:
     AUResponseHandler(const UACommand & r);
-    ~AUResponseHandler();
+    ~AUResponseHandler(){}
     void handle();
 private:
     bool checkExecutedAndRecordIt(int seqNum);

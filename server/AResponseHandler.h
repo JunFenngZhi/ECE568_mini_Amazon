@@ -3,6 +3,7 @@
 
 #include "Server.h"
 #include "protobufCommunication.hpp"
+#include "OrderProcess.h"
 #include <vector>
 
 using namespace std;

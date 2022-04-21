@@ -47,7 +47,7 @@ void processOrder(const Order & order) {
   unique_ptr<connection> C(Server::connectDB("mini_amazon", "postgres", "passw0rd"));
   cout << "check Inventory for order " << order.getPackId() << endl;
   Server::Ptr server = Server::get_instance();
-  
+
   while (1) {
     try {
       // check inventory
@@ -169,7 +169,9 @@ void callATruck(Order order) {
   aOrderTruck->set_destinationx(dest_x);
   aOrderTruck->set_destinationy(dest_y);
   if (order.getUPSId() != -1) {
-    aOrderTruck->set_upsid(order.getUPSId());
+    //why string upsid?
+    string upsidString(to_string(order.getWhID()));
+    aOrderTruck->set_upsid(upsidString);
   }
 
   // add seqNum to this command.

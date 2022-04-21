@@ -1,8 +1,6 @@
 #include "AUResponseHandler.h"
 
-#include "OrderProcess.h"
-
-AUResponseHandler::AUResponseHandler(const UACommand & r) {
+AUResponseHandler::AUResponseHandler(const UACommand & r){
   for (int i = 0; i < r.arrive_size(); i++) {
     utruckarrives.push_back(std::move(r.arrive(i)));
     seqNums.push_back(r.arrive(i).seqnum());
