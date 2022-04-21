@@ -289,3 +289,4 @@ void updateDelivering(connection * C, int packageId) {
   W.exec(sql.str());
   W.commit();
 }
+
