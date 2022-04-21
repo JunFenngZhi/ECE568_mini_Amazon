@@ -1,7 +1,5 @@
 #include "AResponseHandler.h"
 
-
-
 AResponseHandler::AResponseHandler(const AResponses & r) {
   for (int i = 0; i < r.arrived_size(); i++) {
     apurchasemores.push_back(std::move(r.arrived(i)));
@@ -19,11 +17,10 @@ AResponseHandler::AResponseHandler(const AResponses & r) {
   }
 
   // record acks from world
-  for(int i=0;i<r.acks_size();i++){
+  for (int i = 0; i < r.acks_size(); i++) {
     Server::Ptr server = Server::get_instance();
     server->seqNumTable[r.acks(i)] = true;
   }
-  
 }
 
 /*

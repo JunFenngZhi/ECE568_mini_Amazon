@@ -1,6 +1,7 @@
 #ifndef _SERVER_H
 #define _SERVER_H
 
+#include <errno.h>
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 
@@ -12,7 +13,6 @@
 #include <string>
 #include <thread>
 #include <vector>
-#include <errno.h>
 
 #include "./protobuf/AUprotocolV4.pb.h"
 #include "./protobuf/world_amazon.pb.h"
@@ -28,7 +28,6 @@ using namespace std;
 using namespace pqxx;
 
 const int MAX_SEQNUM = 65536;
-
 
 class Server {
   // singleton pattern member and member funtions
@@ -81,7 +80,7 @@ class Server {
   //message queue, transfer message to sending threads
   ThreadSafe_queue<ACommands> worldQueue;
   ThreadSafe_queue<AUCommand> upsQueue;
-  
+
   //order queue. save orders for later processing
   queue<Order> orderQueue;
   mutex order_lck;
@@ -89,11 +88,10 @@ class Server {
  public:
   void run();
   vector<Warehouse> getWhList() { return whList; }
+  size_t getSeqNum();
   static connection * connectDB(string dbName, string userName, string password);
   static void initializeDB(connection * C);
   static void disConnectDB(connection * C);
-  static void setSeqNum();
-  
 };
 
 #endif

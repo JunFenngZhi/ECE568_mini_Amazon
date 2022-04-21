@@ -86,11 +86,8 @@ void processOrder(const Order & order) {
         aproduct->set_description(getDescription(C.get(), itemId));
 
         // add seqNum to this command.
-        server->seqNum_lck.lock();
-        int seqNum = server->curSeqNum;
+        size_t seqNum = server->getSeqNum();
         ap->set_seqnum(seqNum);
-        server->curSeqNum++;
-        server->seqNum_lck.unlock();
 
         // keep sending until get acked.
         pushWorldQueue(ac, seqNum);
@@ -127,11 +124,9 @@ void packOrder(Order order) {
   aproduct->set_description(getDescription(C.get(), order.getItemId()));
 
   // add seqNum to this command.
-  server->seqNum_lck.lock();
-  int seqNum = server->curSeqNum;
+  size_t seqNum = server->getSeqNum();
   apack->set_seqnum(seqNum);
-  server->curSeqNum++;
-  server->seqNum_lck.unlock();
+
 
   Server::disConnectDB(C.get());
   pushWorldQueue(acommand, seqNum);
@@ -175,11 +170,8 @@ void callATruck(Order order) {
   }
 
   // add seqNum to this command.
-  server->seqNum_lck.lock();
-  int seqNum = server->curSeqNum;
+  int seqNum = server->getSeqNum();
   aOrderTruck->set_seqnum(seqNum);
-  server->curSeqNum++;
-  server->seqNum_lck.unlock();
 
   pushUpsQueue(aucommand, seqNum);
   cout << "begin call a truck for order " << order.getPackId() << endl;
@@ -290,11 +282,8 @@ void processLoaded(ALoaded r) {
 
   // add seqNum to this command.
   Server::Ptr server = Server::get_instance();
-  server->seqNum_lck.lock();
-  int seqNum = server->curSeqNum;
+  size_t seqNum = server->getSeqNum();
   aStartDeliver->set_seqnum(seqNum);
-  server->curSeqNum++;
-  server->seqNum_lck.unlock();
 
   pushUpsQueue(aucommand, seqNum);
   updateDelivering(C.get(), packageId);
@@ -335,11 +324,8 @@ void processTruckArrived(UTruckArrive r) {
 
   // add seqNum to this command.
   Server::Ptr server = Server::get_instance();
-  server->seqNum_lck.lock();
-  int seqNum = server->curSeqNum;
+  size_t seqNum = server->getSeqNum();
   aPutOnTruck->set_seqnum(seqNum);
-  server->curSeqNum++;
-  server->seqNum_lck.unlock();
 
   Server::disConnectDB(C.get());
   pushWorldQueue(acommand, seqNum);

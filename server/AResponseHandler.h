@@ -1,10 +1,11 @@
 #ifndef _ARESPONSEHANDLER_H
 #define _ARESPONSEHANDLER_H
 
+#include <vector>
+
+#include "OrderProcess.h"
 #include "Server.h"
 #include "protobufCommunication.hpp"
-#include "OrderProcess.h"
-#include <vector>
 
 using namespace std;
 
@@ -20,9 +21,8 @@ class AResponseHandler {
   ~AResponseHandler() {}
   void handle();
 
-  private:
+ private:
   bool checkExecutedAndRecordIt(int seqNum);
-
 };
 
 #endif

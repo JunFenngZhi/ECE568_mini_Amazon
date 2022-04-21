@@ -18,7 +18,7 @@ class ThreadSafe_queue {
   condition_variable cv;
 
  public:
-  ThreadSafe_queue(){}
+  ThreadSafe_queue() {}
 
   ThreadSafe_queue(ThreadSafe_queue const & other) {
     lock_guard<mutex> lock(other.mtx);

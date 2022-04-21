@@ -5,7 +5,6 @@
 #include "socket.h"
 #include "sql_function.h"
 
-
 /* ------------------------ "server singleton pattern" ------------------------ */
 Server::Ptr Server::m_instance_ptr = nullptr;
 mutex Server::m_mutex;
@@ -32,11 +31,11 @@ Server::Server() {
   for (size_t i = 0; i < MAX_SEQNUM; i++) {
     seqNumTable.push_back(false);
   }
-  
+
   n_warehouse = 9;  // should be an odd number for symetric
   wh_distance = 20;
   webPortNum = "9999";
-  worldHostName = "vcm-24822.vm.duke.edu"; // for changhao testing
+  worldHostName = "vcm-24822.vm.duke.edu";  // for changhao testing
   //worldHostName = "vcm-25941.vm.duke.edu"; //for junfeng testing
   worldPortNum = "12345";
   upsHostName = "0.0.0.0";
@@ -112,8 +111,9 @@ void Server::initializeWorld() {
       w2->set_id(i + n_warehouse / 2);
       w2->set_x(-1 * 0.707 * wh_distance * i);
       w2->set_y(-1 * 0.707 * wh_distance * i);
-      whList.push_back(
-          Warehouse(-1 * 0.707 * wh_distance * i, -1 * 0.707 * wh_distance * i, i + n_warehouse / 2));
+      whList.push_back(Warehouse(-1 * 0.707 * wh_distance * i,
+                                 -1 * 0.707 * wh_distance * i,
+                                 i + n_warehouse / 2));
     }
   }
   if (worldID != -1) {
@@ -193,7 +193,8 @@ void Server::acceptOrderRequest() {
   the connection* C. It will throw an exception if fails. 
 */
 connection * Server::connectDB(string dbName, string userName, string password) {
-  connection * C = new connection("dbname=" + dbName + " user=" + userName + " password=" + password);   // use in real sys
+  connection * C = new connection("dbname=" + dbName + " user=" + userName +
+                                  " password=" + password);  // use in real sys
   // connection * C =
   //     new connection("host=db port=5432 dbname=" + dbName + " user=" + userName +
   //                    " password=" + password);  // use in docker
@@ -223,37 +224,35 @@ void Server::disConnectDB(connection * C) {
   C->disconnect();
 }
 
-
 /* ------------------------ "IO Functions" ------------------------ */
 /*
   keep receiving response from the world.
 */
-void Server::keepReceivingMsgFromWorld(){
+void Server::keepReceivingMsgFromWorld() {
   unique_ptr<socket_in> world_in(new socket_in(world_fd));
-  while(1){
-      AResponses r;
-      if (recvMesgFrom<AResponses>(r, world_in.get()) == false) {
-        continue;
-      }
-      AResponseHandler h(r);
-      h.handle();
+  while (1) {
+    AResponses r;
+    if (recvMesgFrom<AResponses>(r, world_in.get()) == false) {
+      continue;
+    }
+    AResponseHandler h(r);
+    h.handle();
   }
 }
 
 /*
   keep receiving response from the ups. 
 */
-void Server::keepReceivingMsgFromUps(){
+void Server::keepReceivingMsgFromUps() {
   unique_ptr<socket_in> ups_in(new socket_in(ups_fd));
-   while(1){
-      UACommand r;
-      if (recvMesgFrom<UACommand>(r, ups_in.get()) == false) {
-        continue;
-      }
-      AUResponseHandler h(r);
-      h.handle();
-   }
-    
+  while (1) {
+    UACommand r;
+    if (recvMesgFrom<UACommand>(r, ups_in.get()) == false) {
+      continue;
+    }
+    AUResponseHandler h(r);
+    h.handle();
+  }
 }
 
 /*
@@ -284,4 +283,15 @@ void Server::keepSendingMsgToUps() {
       throw MyException("fail to send message in ups.");
     }
   }
+}
+
+/* ------------------------ "server SeqNum related functions" ------------------------ */
+/*
+  return current sequence number and curSeqNum self increase. thw whole function workd atomically. 
+*/
+size_t Server::getSeqNum() {
+  lock_guard<mutex> lck(seqNum_lck);
+  size_t res = curSeqNum;
+  curSeqNum++;
+  return res;
 }

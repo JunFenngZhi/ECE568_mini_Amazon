@@ -1,6 +1,6 @@
 #include "AUResponseHandler.h"
 
-AUResponseHandler::AUResponseHandler(const UACommand & r){
+AUResponseHandler::AUResponseHandler(const UACommand & r) {
   for (int i = 0; i < r.arrive_size(); i++) {
     utruckarrives.push_back(std::move(r.arrive(i)));
     seqNums.push_back(r.arrive(i).seqnum());
@@ -53,10 +53,10 @@ void AUResponseHandler::handle() {
 
   // use different threads to handle different responses.
   for (auto r : utruckarrives) {
-      if (checkExecutedAndRecordIt(r.seqnum()) == false) {
-        thread t(processTruckArrived, r);
-        t.detach();
-      }
+    if (checkExecutedAndRecordIt(r.seqnum()) == false) {
+      thread t(processTruckArrived, r);
+      t.detach();
+    }
   }
 
   for (auto r : udelivereds) {
