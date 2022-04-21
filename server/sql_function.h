@@ -21,4 +21,9 @@ void saveItemInDB(connection* C, const Order & order);
 void saveOrderInDB(connection* C, Order & order);
 void setTableDefaultValue(connection* C);
 void updatePacked(connection * C, int packageId);
+bool checkOrderPacked(connection * C, int packageID, int & whId);
+void updateLoading(connection * C, int packageId);
+void updateLoaded(connection * C, int packageId);
+void updateDelivering(connection * C, int packageId);
+void updateDelivered(connection * C, int packageId);
 #endif

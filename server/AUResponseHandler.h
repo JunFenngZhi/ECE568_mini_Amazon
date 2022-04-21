@@ -8,14 +8,16 @@
 class AUResponseHandler
 {
 private:
-    vector<AOrderATruck> aorderatrucks;
-    vector<AStartDeliver> astartdelivers;
+    vector<UTruckArrive> utruckarrives;
+    vector<UDelivered> udelivereds;
     vector<int> seqNums;
     
 public:
     AUResponseHandler(const AUResponse & r);
     ~AUResponseHandler();
     void handle();
+private:
+    bool checkExecutedAndRecordIt(int seqNum);
 };
 
 #endif

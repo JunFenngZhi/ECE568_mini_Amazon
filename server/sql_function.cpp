@@ -103,7 +103,7 @@ void saveItemInDB(connection* C, const Order & order) {
     stringstream sql;  
     sql << "INSERT INTO ITEM (ITEM_ID, DESCRIPTION, PRICE) "
     "VALUES(" << itemid << ", " << W.quote(item_description) << ", " << item_price << ")"
-    <<"ON CONFLICT (ITEM_ID) DO NOTHING;";
+    <<" ON CONFLICT (ITEM_ID) DO NOTHING;";
     W.exec(sql.str());
     W.commit();
     }
@@ -176,18 +176,6 @@ void addInventory(connection * C, int whID, int count, int productId) {
 
 
 /*
-    update specific order status to be 'packed'
-*/
-void updatePacked(connection * C, int packageId) {
-     work W(*C);
-     stringstream sql;
-     sql << "UPDATE ORDERS set STATUS= " << W.quote("packed") << "WHERE PACK_ID= " << packageId << ";";
-
-     W.exec(sql.str());
-     W.commit();    
-}
-
-/*
     decrease inventory of the product in the warehouse and check the version id of the inventory.
     If version is not matched, throw exception.
 */
@@ -205,4 +193,95 @@ void decreaseInventory(connection * C, int whID, int count, int productId, int v
             "Invalid update: version of this order does not match.\n");
     }
     W.commit();
+}
+
+
+/*
+    check the order status is packed
+    if packed: return true, if not packed, return false
+*/
+bool checkOrderPacked(connection * C, int packageID, int & whId) {
+    work W(*C);
+    stringstream sql; 
+
+    sql << "SELECT STATUS, WH_ID FROM ORDER WHERE PACK_ID = " << packageID << ";";
+    result statusRes(W.exec(sql.str()));
+    string packageStatus = statusRes[0][0].as<string>();
+    whId = statusRes[0][1].as<int>();
+    if(packageStatus == "packed") {
+        return true;
+    } else {
+        return false;
+    }
+    W.commit();
+}
+
+
+/*
+    update specific order status to be 'packed'
+*/
+void updatePacked(connection * C, int packageId) {
+     work W(*C);
+     stringstream sql;
+     string packed("packed");
+     sql << "UPDATE ORDERS set STATUS= " << W.quote(packed) << " WHERE PACK_ID= " << packageId << ";";
+
+     W.exec(sql.str());
+     W.commit();    
+}
+
+
+/*
+    update specific order status to be 'delivered'
+*/
+void updateDelivered(connection * C, int packageId) {
+     work W(*C);
+     stringstream sql;
+     string delivered("delivered");
+     sql << "UPDATE ORDERS set STATUS= " << W.quote(delivered) << " WHERE PACK_ID= " << packageId << ";";
+
+     W.exec(sql.str());
+     W.commit();    
+}
+
+
+/*
+    update specific order status to be 'loaded'
+*/
+void updateLoaded(connection * C, int packageId) {
+     work W(*C);
+     stringstream sql;
+     string loaded("loaded");
+     sql << "UPDATE ORDERS set STATUS= " << W.quote(loaded) << " WHERE PACK_ID= " << packageId << ";";
+
+     W.exec(sql.str());
+     W.commit();    
+}
+
+
+/*
+    update specific order status to be 'loading'
+*/
+void updateLoading(connection * C, int packageId) {
+     work W(*C);
+     stringstream sql;
+     string loaded("loading");
+     sql << "UPDATE ORDERS set STATUS= " << W.quote(loaded) << " WHERE PACK_ID= " << packageId << ";";
+
+     W.exec(sql.str());
+     W.commit();    
+}
+
+
+/*
+    update specific order status to be 'delivering'
+*/
+void updateDelivering(connection * C, int packageId) {
+     work W(*C);
+     stringstream sql;
+     string loaded("delivering");
+     sql << "UPDATE ORDERS set STATUS= " << W.quote(loaded) << " WHERE PACK_ID= " << packageId << ";";
+
+     W.exec(sql.str());
+     W.commit();    
 }

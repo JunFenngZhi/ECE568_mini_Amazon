@@ -247,11 +247,100 @@ void processPacked(APacked r) {
 
   //process this order status to be 'packed'
   updatePacked(C.get(), packageId);
+
+  Server::disConnectDB(C.get());
 }
 
 /*
     create new thread, let it to process Loaded
-    (Send AStartDeliver to UPS)
+    (Send AStartDeliver to UPS, ????????change order status as "loaded", when to set order
+    status as delivering?)
 */
 void processLoaded(ALoaded r) {
+  //Connect the database
+    unique_ptr<connection> C(Server::connectDB("mini_amazon", "postgres", "passw0rd"));
+
+  // get package id
+  int packageId = r.shipid();
+
+  //update order status as "loaded"
+  updateloaded(C.get(),packageId);
+
+  Server::disConnectDB(C.get());
+
+  // Create AStartDeliver Command
+  AUCommand aucommand;
+  AStartDeliver * aStartDeliver = aucommand.add_deliver();
+  aStartDeliver->set_packageid(packageId);
+
+   // add seqNum to this command.
+  Server::Ptr server = Server::get_instance();
+  server->seqNum_lck.lock();
+  int seqNum = server->curSeqNum;
+  aStartDeliver->set_seqnum(seqNum);
+  server->curSeqNum++;
+  server->seqNum_lck.unlock();
+  
+  pushUpsQueue(aucommand, seqNum);
+}
+
+
+
+/* ------------------------ "Handle Response from UPS" ------------------------ */
+/*
+  receive UTruckArrive Response, keep checking database if the order status is packed 
+  if order status is packed, then create APutOnTruck Command and send to World
+*/
+void processTruckArrived(UTruckArrive r) {
+    //Connect the database
+    unique_ptr<connection> C(Server::connectDB("mini_amazon", "postgres", "passw0rd"));
+
+    //get package id and truck id and warehouse id
+    int packageId = r.packageid();
+    int truckId = r.truckid();
+    int whId = -1;
+
+    //check database if the order status is packed
+    while(1) {
+      if(checkOrderPacked(C.get(), packageId, whId)){
+        break;
+      }
+    }
+    //if the order is packed, then we need to send APutOnTruck to the world
+    // and update order status as "loading"
+    updateLoading(C.get(), packageId);
+
+    //create APutOnTruck Command
+    ACommands acommand;
+    APutOnTruck * aPutOnTruck = acommand.add_load();
+    aPutOnTruck->set_whnum(whId);
+    aPutOnTruck->set_shipid(packageId);
+
+     // add seqNum to this command.
+    Server::Ptr server = Server::get_instance();
+    server->seqNum_lck.lock();
+    int seqNum = server->curSeqNum;
+    aPutOnTruck->set_seqnum(seqNum);
+    server->curSeqNum++;
+    server->seqNum_lck.unlock();
+
+    Server::disConnectDB(C.get());
+    pushWorldQueue(acommand, seqNum);    
+}
+
+/*
+  receive UDelivered Response, change order status to be 'delivered'
+*/
+void processUDelivered(UDelivered r) {
+  //Connect the database
+  unique_ptr<connection> C(Server::connectDB("mini_amazon", "postgres", "passw0rd"));
+
+  //get shipid
+  int packageId = r.packageid();
+
+  //process this order status to be 'delivered'
+  updateDelivered(C.get(), packageId);
+
+  Server::disConnectDB(C.get());
+
 }
