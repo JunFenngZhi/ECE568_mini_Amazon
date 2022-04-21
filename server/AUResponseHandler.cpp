@@ -2,26 +2,22 @@
 
 #include "OrderProcess.h"
 
-AUResponseHandler::AUResponseHandler(const AUResponse & r) {
-    for (int i = 0; i < r.arrive_size(); i++) {
+AUResponseHandler::AUResponseHandler(const UACommand & r) {
+  for (int i = 0; i < r.arrive_size(); i++) {
     utruckarrives.push_back(std::move(r.arrive(i)));
-    //repeated seqNums??
-    for(int j = 0; j < r.arrive(i).seqnum_size(); j++){
-        seqNums.push_back(r.arrive(i).seqnum(j));
-    }
+    seqNums.push_back(r.arrive(i).seqnum());
   }
-    for(int i = 0; i < r.delivered_size(); i++) {
-     udelivereds.push_back(std::move(r.delivered(i)));
-     seqNums.push_back(r.delivered(i).seqnum());
-    }
+  for (int i = 0; i < r.delivered_size(); i++) {
+    udelivereds.push_back(std::move(r.delivered(i)));
+    seqNums.push_back(r.delivered(i).seqnum());
+  }
 
-    // record acks from ups
-    for(int i=0;i<r.acks_size();i++){
+  // record acks from ups
+  for (int i = 0; i < r.acks_size(); i++) {
     Server::Ptr server = Server::get_instance();
     server->seqNumTable[r.acks(i)] = true;
   }
 }
-
 
 /*
   check whether given seqNum has been executed.If yes, return true,
@@ -44,7 +40,6 @@ bool AUResponseHandler::checkExecutedAndRecordIt(int seqNum) {
   }
 }
 
-
 /*
     use different threads to handle different type of responses, and ack those messages.
 */
@@ -55,19 +50,15 @@ void AUResponseHandler::handle() {
     aucommand.add_acks(i);
     aucommand.set_acks(i, seqNums[i]);
   }
-  
   Server::Ptr server = Server::get_instance();
   server->upsQueue.push(aucommand);
 
   // use different threads to handle different responses.
   for (auto r : utruckarrives) {
-      //repeated seqnums???????
-    for (int i = 0; i < r.seqnum_size(); i++){
-     if (checkExecutedAndRecordIt(r.seqnum(i)) == false) {
-      thread t(processTruckArrived, r);
-      t.detach();
-    }
-    }
+      if (checkExecutedAndRecordIt(r.seqnum()) == false) {
+        thread t(processTruckArrived, r);
+        t.detach();
+      }
   }
 
   for (auto r : udelivereds) {

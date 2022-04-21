@@ -57,7 +57,6 @@ void AResponseHandler::handle() {
     ac.add_acks(i);
     ac.set_acks(i, seqNums[i]);
   }
-  
   Server::Ptr server = Server::get_instance();
   server->worldQueue.push(ac);
 

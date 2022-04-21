@@ -14,7 +14,7 @@
 #include <vector>
 #include <errno.h>
 
-#include "./protobuf/AUprotocolV3.pb.h"
+#include "./protobuf/AUprotocolV4.pb.h"
 #include "./protobuf/world_amazon.pb.h"
 #include "AResponseHandler.h"
 #include "AUResponseHandler.h"

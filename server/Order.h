@@ -17,6 +17,7 @@ class Order {
   string item_description;
   int UPS_ID;
   int pack_id;
+  int wh_id;
 
  public:
   Order() {}
@@ -48,6 +49,7 @@ class Order {
     item_id = stoi(res[3]);
     price = stof(res[4]);
     item_description = res[5];
+    wh_id = -1;
   }
   int getAddressX() const { return address_x; }
   int getAddressY() const { return address_y; }
@@ -55,9 +57,24 @@ class Order {
   int getItemId() const { return item_id; }
   float getPrice() const { return price; }
   int getUPSId() const { return UPS_ID; }
-  string getDescription() const {return item_description; }
-  void setPackId(int packid) {pack_id = packid;}
-  int getPackId() const {return pack_id;}
+  string getDescription() const { return item_description; }
+  void setPackId(int packid) { pack_id = packid; }
+  int getPackId() const { return pack_id; }
+  void setWhID(int whID) { wh_id = whID; }
+  int getWhID() const { return wh_id; }
+  void showOrder() const {
+    cout << "------------------------\n";
+    cout << "package_id: " << pack_id << endl;
+    cout << "item_id: " << item_id << endl;
+    cout << "amount: " << amount << endl;
+    cout << "address_x: " << address_x << endl;
+    cout << "address_y: " << address_y << endl;
+    cout << "price: " << price << endl;
+    cout << "wh_id: " << wh_id << endl;
+    cout << "item_description: " << item_description << endl;
+    cout << "UPS_ID: " << UPS_ID << endl;
+    cout << "------------------------\n";
+  }
 };
 
 #endif

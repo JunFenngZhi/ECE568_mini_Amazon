@@ -246,8 +246,8 @@ void Server::keepReceivingMsgFromWorld(){
 void Server::keepReceivingMsgFromUps(){
   unique_ptr<socket_in> ups_in(new socket_in(ups_fd));
    while(1){
-      AUResponse r;
-      if (recvMesgFrom<AUResponse>(r, ups_in.get()) == false) {
+      UACommand r;
+      if (recvMesgFrom<UACommand>(r, ups_in.get()) == false) {
         continue;
       }
       AUResponseHandler h(r);

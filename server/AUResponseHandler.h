@@ -13,7 +13,7 @@ private:
     vector<int> seqNums;
     
 public:
-    AUResponseHandler(const AUResponse & r);
+    AUResponseHandler(const UACommand & r);
     ~AUResponseHandler();
     void handle();
 private:
