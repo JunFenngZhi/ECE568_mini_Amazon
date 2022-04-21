@@ -127,12 +127,13 @@ void saveOrderInDB(connection * C, Order & order) {
   int amount = order.getAmount();
   int upsid = order.getUPSId();
   int itemid = order.getItemId();
+  int whid = order.getWhID();
   float item_price = order.getPrice();
   float total_price = item_price * amount;
-  sql << "INSERT INTO ORDERS (ADDR_X, ADDR_Y, AMOUNT, UPS_ID, ITEM_ID, PRICE) "
+  sql << "INSERT INTO ORDERS (ADDR_X, ADDR_Y, AMOUNT, UPS_ID, ITEM_ID, PRICE, WH_ID) "
          "VALUES("
       << addrx << ", " << addry << ", " << amount << ", " << upsid << ", " << itemid
-      << ", " << total_price << ");SELECT SCOPE_IDENTITY;";
+      << ", " << total_price << ", " << whid << ");SELECT SCOPE_IDENTITY;";
   result orderRes = W.exec(sql.str());
   int packageId = orderRes[0][0].as<int>();
   order.setPackId(packageId);

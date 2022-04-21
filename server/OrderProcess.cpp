@@ -46,7 +46,8 @@ void parseOrder(string msg) {
 void processOrder(const Order & order) {
   unique_ptr<connection> C(Server::connectDB("mini_amazon", "postgres", "passw0rd"));
   cout << "check Inventory for order " << order.getPackId() << endl;
-
+  Server::Ptr server = Server::get_instance();
+  
   while (1) {
     try {
       // check inventory
@@ -277,7 +278,7 @@ void processLoaded(ALoaded r) {
 
   //update order status as "loaded"
   int packageId = r.shipid();
-  updateloaded(C.get(), packageId);
+  updateLoaded(C.get(), packageId);
   cout << "Already load order " << packageId << endl;
 
   // Create AStartDeliver Command

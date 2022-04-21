@@ -49,7 +49,6 @@ class Server {
   void acceptOrderRequest();
   void initializeWorld();
   void getWorldIDFromUPS();
-  //void keepReceivingMsg();
   void keepSendingMsgToWorld();
   void keepSendingMsgToUps();
   void keepReceivingMsgFromUps();
@@ -93,6 +92,7 @@ class Server {
   static connection * connectDB(string dbName, string userName, string password);
   static void initializeDB(connection * C);
   static void disConnectDB(connection * C);
+  static void setSeqNum();
   
 };
 

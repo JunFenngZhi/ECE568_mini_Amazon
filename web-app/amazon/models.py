@@ -38,6 +38,7 @@ class Order(models.Model):
     amount = models.IntegerField()
     ups_id = models.IntegerField()
     item = models.ForeignKey(Item, on_delete=models.SET_NULL, null=True)
+    wh_id = models.IntegerField()
     price = models.FloatField(max_length=1000)
     version = models.IntegerField()  # need default value.
 

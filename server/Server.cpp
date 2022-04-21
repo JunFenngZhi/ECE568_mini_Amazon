@@ -181,7 +181,7 @@ void Server::acceptOrderRequest() {
       continue;
     }
 
-    // TODO: put request into task queue, using thread pool
+    // put request into task queue, using thread pool
     thread t(parseOrder, msg);
     t.detach();
   }
