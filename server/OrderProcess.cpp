@@ -1,6 +1,8 @@
 #include "OrderProcess.h"
-#include "socket.h"
+
 #include <string>
+
+#include "socket.h"
 
 /*
   select a warehouse, which is closest to the order address. return the selected warehouse index.
@@ -39,8 +41,8 @@ void parseOrder(string msg, int client_fd) {
   Server::disConnectDB(C.get());
 
   // send back ack info to front-end
-  string ackResponse = "ACk package_id:"+to_string(order.getPackId());
-  sendMsg(client_fd,ackResponse.c_str(),ackResponse.length());
+  string ackResponse = "ACk package_id:" + to_string(order.getPackId());
+  sendMsg(client_fd, ackResponse.c_str(), ackResponse.length());
   close(client_fd);
 
   processOrder(order);
@@ -79,6 +81,8 @@ void processOrder(const Order & order) {
         return;
       }
       else {
+        cout << "Inventory is not enough for order " << order.getPackId()
+             << ", send APurchasemore to world" << endl;
         // save order
         server->order_lck.lock();
         server->orderQueue.push(order);
@@ -99,8 +103,6 @@ void processOrder(const Order & order) {
 
         // keep sending until get acked.
         pushWorldQueue(ac, seqNum);
-        cout << "Inventory is not enough for order " << order.getPackId()
-             << ", already send APurchasemore to world" << endl;
         break;
       }
     }
@@ -116,6 +118,7 @@ void processOrder(const Order & order) {
   Send APack command to the world to pack given order.
 */
 void packOrder(Order order) {
+  cout << "begin pack order " << order.getPackId() << endl;
   Server::Ptr server = Server::get_instance();
   unique_ptr<connection> C(Server::connectDB("mini_amazon", "postgres", "passw0rd"));
 
@@ -135,16 +138,15 @@ void packOrder(Order order) {
   size_t seqNum = server->getSeqNum();
   apack->set_seqnum(seqNum);
 
-
   Server::disConnectDB(C.get());
   pushWorldQueue(acommand, seqNum);
-  cout << "begin pack order " << order.getPackId() << endl;
 }
 
 /*
   Send AOrderATruck command to UPS to assign a truck to delivery the given package.
 */
 void callATruck(Order order) {
+  cout << "begin call a truck for order " << order.getPackId() << endl;
   Server::Ptr server = Server::get_instance();
 
   // get warehouse information
@@ -182,7 +184,6 @@ void callATruck(Order order) {
   aOrderTruck->set_seqnum(seqNum);
 
   pushUpsQueue(aucommand, seqNum);
-  cout << "begin call a truck for order " << order.getPackId() << endl;
 }
 
 /* ------------------------ "Message Queue push functions" ------------------------ */
@@ -293,10 +294,10 @@ void processLoaded(ALoaded r) {
   size_t seqNum = server->getSeqNum();
   aStartDeliver->set_seqnum(seqNum);
 
+  cout << "start deliver order " << packageId << endl;
   pushUpsQueue(aucommand, seqNum);
   updateDelivering(C.get(), packageId);
-  cout << "start deliver order " << packageId << endl;
-
+  
   Server::disConnectDB(C.get());
 }
 
@@ -324,6 +325,7 @@ void processTruckArrived(UTruckArrive r) {
   }
 
   //create APutOnTruck Command
+  cout << "start load order " << packageId << endl;
   ACommands acommand;
   APutOnTruck * aPutOnTruck = acommand.add_load();
   aPutOnTruck->set_whnum(whId);
@@ -337,9 +339,9 @@ void processTruckArrived(UTruckArrive r) {
 
   Server::disConnectDB(C.get());
   pushWorldQueue(acommand, seqNum);
-
+  
   updateLoading(C.get(), packageId);
-  cout << "start load order " << packageId << endl;
+  
 }
 
 /*

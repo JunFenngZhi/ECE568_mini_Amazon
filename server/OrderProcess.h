@@ -4,7 +4,7 @@
 #include "sql_function.h"
 #include "Warehouse.h"
 
-void parseOrder(string msg);
+void parseOrder(string msg, int client_fd);
 int selectWareHouse(const vector<Warehouse> & whList, const Order & order);
 void processOrder(const Order& order); 
 void processPurchaseMore(APurchaseMore r);
