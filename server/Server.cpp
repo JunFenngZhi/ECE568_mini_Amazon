@@ -173,7 +173,6 @@ void Server::acceptOrderRequest() {
     string msg;
     try {
       msg = recvMsg(client_fd);
-      sendMsg(client_fd, "ACK", 4);
     }
     catch (const std::exception & e) {
       std::cerr << e.what() << '\n';
