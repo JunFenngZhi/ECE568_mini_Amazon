@@ -133,7 +133,7 @@ void saveOrderInDB(connection * C, Order & order) {
   sql << "INSERT INTO ORDERS (ADDR_X, ADDR_Y, AMOUNT, UPS_ID, ITEM_ID, PRICE, WH_ID) "
          "VALUES("
       << addrx << ", " << addry << ", " << amount << ", " << upsid << ", " << itemid
-      << ", " << total_price << ", " << whid << ");SELECT SCOPE_IDENTITY;";
+      << ", " << total_price << ", " << whid << ");SELECT currval('orders_pack_id_seq');";
   result orderRes = W.exec(sql.str());
   int packageId = orderRes[0][0].as<int>();
   order.setPackId(packageId);
@@ -169,10 +169,10 @@ void addInventory(connection * C, int whID, int count, int productId) {
   sql << "INSERT INTO INVENTORY (ITEM_ID, ITEM_AMOUNT, WH_ID) "
          "VALUES("
       << productId << ", " << count << ", " << whID
-      << ") ON CONFLICT (ITEM_ID) DO UPDATE "
+      << ") ON CONFLICT (ITEM_ID, WH_ID) DO UPDATE "
          "set ITEM_AMOUNT = INVENTORY.ITEM_AMOUNT+"
       << count << ", VERSION = INVENTORY.VERSION+1"
-      << " WHERE ITEM_ID= " << productId << "AND WH_ID= " << whID << ";";
+      << " WHERE INVENTORY.ITEM_ID= " << productId << "AND INVENTORY.WH_ID= " << whID << ";";
   W.exec(sql.str());
   W.commit();
 }

@@ -31,8 +31,8 @@ def index_view(request):
 
         # Send the orderInfo to the server, and receive the server's response
         # if not receive, it will return false, else return true
-        recvOrNot = sendOrder(OrderInfo)
-        if recvOrNot == True:
-            return HttpResponse('PlaceOrder Success')
-        else:
+        packid = sendOrder(OrderInfo)
+        if packid == -1:
             return HttpResponse('PlaceOrder Fail')
+        else:
+            return HttpResponse('The Order Packid is:' + packid)

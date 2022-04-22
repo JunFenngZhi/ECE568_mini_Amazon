@@ -263,7 +263,7 @@ void processPacked(APacked r) {
 
 /*
     create new thread, let it to process Loaded
-    (Send AStartDeliver to UPS, ????????change order status as "loaded", when to set order
+    (Send AStartDeliver to UPS, change order status as "loaded", when to set order
     status as delivering?)
 */
 void processLoaded(ALoaded r) {

@@ -18,8 +18,9 @@ def sendOrder(orderInfo):
 
     print('after send')
 
-    ACK_flag = client.recv(1024)
-    if ACK_flag != 'ACK':
-        return True
+    ACK_str = client.recv(1024)
+    ACK_packid = ACK_str.split(":")
+    if ACK_packid == '':
+        return -1
     else:
-        return False
+        return ACK_packid[1]
