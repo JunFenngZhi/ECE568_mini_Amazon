@@ -35,14 +35,16 @@ Server::Server() {
   n_warehouse = 9;  // should be an odd number for symetric
   wh_distance = 20;
   webPortNum = "9999";
-  worldHostName = "vcm-24822.vm.duke.edu";  // for changhao testing
+  //worldHostName = "vcm-24822.vm.duke.edu";  // for changhao testing
   //worldHostName = "vcm-25941.vm.duke.edu"; //for junfeng testing
-  worldPortNum = "12345";
-  upsHostName = "0.0.0.0";
+  worldHostName = "vcm-24717.vm.duke.edu";  // for real testing
+  worldPortNum = "23456";                   // test in 23456, use 12345
+  upsHostName = "vcm-24717.vm.duke.edu";
   upsPortNum = "8888";
+  worldID = -1;
 
   //used in development
-  worldID = 3;
+  //worldID = 3;
 }
 
 /* ------------------------ "server runtime functions" ------------------------ */
@@ -52,7 +54,7 @@ Server::Server() {
 */
 void Server::run() {
   try {
-    //getWorldIDFromUPS();
+    getWorldIDFromUPS();
     initializeWorld();
     thread tI_world(&Server::keepReceivingMsgFromWorld, this);
     thread tI_ups(&Server::keepReceivingMsgFromUps, this);
@@ -191,11 +193,11 @@ void Server::acceptOrderRequest() {
   the connection* C. It will throw an exception if fails. 
 */
 connection * Server::connectDB(string dbName, string userName, string password) {
-  // connection * C = new connection("dbname=" + dbName + " user=" + userName +
-  //                                 " password=" + password);  // use in real sys
-  connection * C =
-      new connection("host=db port=5432 dbname=" + dbName + " user=" + userName +
-                     " password=" + password);  // use in docker
+  connection * C = new connection("dbname=" + dbName + " user=" + userName +
+                                  " password=" + password);  // use in real sys
+  // connection * C =
+  //     new connection("host=db port=5432 dbname=" + dbName + " user=" + userName +
+  //                    " password=" + password);  // use in docker
   if (C->is_open()) {
     //cout << "Opened database successfully: " << C->dbname() << endl;
   }

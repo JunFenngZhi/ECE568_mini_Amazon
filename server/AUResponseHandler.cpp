@@ -30,7 +30,7 @@ bool AUResponseHandler::checkExecutedAndRecordIt(int seqNum) {
 
   // if not exists, insert seqNum in the set, else exit
   if (it == server->executeTable_Ups.end()) {
-    server->executeTable_World.insert(seqNum);
+    server->executeTable_Ups.insert(seqNum);
     return false;
   }
   else {

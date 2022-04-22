@@ -140,6 +140,7 @@ void packOrder(Order order) {
 
   Server::disConnectDB(C.get());
   pushWorldQueue(acommand, seqNum);
+  cout<<"already send Apack command to world.\n"; 
 }
 
 /*
@@ -184,6 +185,7 @@ void callATruck(Order order) {
   aOrderTruck->set_seqnum(seqNum);
 
   pushUpsQueue(aucommand, seqNum);
+  cout<<"already send AOrderATruck command to world.\n"; 
 }
 
 /* ------------------------ "Message Queue push functions" ------------------------ */
@@ -314,7 +316,7 @@ void processTruckArrived(UTruckArrive r) {
   int packageId = r.packageid();
   int truckId = r.truckid();
   int whId = -1;
-  cout << "truck arrive for order " << packageId << endl;
+  cout << "truck "<<r.truckid()<<" arrive for order " << packageId <<" with seqNum: "<<r.seqnum() << endl;
 
   //check database if the order status is packed
   while (1) {
@@ -325,7 +327,7 @@ void processTruckArrived(UTruckArrive r) {
   }
 
   //create APutOnTruck Command
-  cout << "start load order " << packageId << endl;
+  cout << "start load order " << packageId <<" with seqNum: "<<r.seqnum()<< endl;
   ACommands acommand;
   APutOnTruck * aPutOnTruck = acommand.add_load();
   aPutOnTruck->set_whnum(whId);
@@ -354,7 +356,7 @@ void processUDelivered(UDelivered r) {
   //process this order status to be 'delivered'
   int packageId = r.packageid();
   updateDelivered(C.get(), packageId);
-  cout << "Already delivered order " << packageId << endl;
+  cout << "Already delivered order " << packageId <<" with seqNum: "<<r.seqnum()<< endl;
 
   Server::disConnectDB(C.get());
 }

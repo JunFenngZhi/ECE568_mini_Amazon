@@ -207,7 +207,7 @@ bool checkOrderPacked(connection * C, int packageID, int & whId) {
   work W(*C);
   stringstream sql;
 
-  sql << "SELECT STATUS, WH_ID FROM ORDER WHERE PACK_ID = " << packageID << ";";
+  sql << "SELECT STATUS, WH_ID FROM ORDERS WHERE PACK_ID = " << packageID << ";";
   result statusRes(W.exec(sql.str()));
   string packageStatus = statusRes[0][0].as<string>();
   whId = statusRes[0][1].as<int>();
