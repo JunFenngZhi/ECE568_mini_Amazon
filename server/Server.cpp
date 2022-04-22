@@ -173,8 +173,6 @@ void Server::acceptOrderRequest() {
     string msg;
     try {
       msg = recvMsg(client_fd);
-      sendMsg(client_fd, "ACK", 4);
-      close(client_fd);
     }
     catch (const std::exception & e) {
       std::cerr << e.what() << '\n';
@@ -182,7 +180,7 @@ void Server::acceptOrderRequest() {
     }
 
     // put request into task queue, using thread pool
-    thread t(parseOrder, msg);
+    thread t(parseOrder, msg, client_fd);
     t.detach();
   }
 }
