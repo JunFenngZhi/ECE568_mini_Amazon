@@ -1,0 +1,24 @@
+{% extends "amazon/base.html" %}
+{% block content %}
+<h2 class="text-muted">Fruit</h2>
+<li><a href="{% url 'detail' 1 5 'Banana' %}">Banana</a></li>
+<li><a href="{% url 'detail' 2 10 'Apple' %}">Apple</a></li>
+<li><a href="{% url 'detail' 3 15 'PineApple' %}">PineApple</a></li>
+<li><a href="{% url 'detail' 4 20 'WaterMelon' %}">WaterMelon</a></li>
+<li><a href="{% url 'detail' 5 25 'Pear' %}">Pear</a></li>
+<li><a href="{% url 'detail' 6 30 'Cherry' %}">Cherry</a></li>
+<li><a href="{% url 'detail' 7 35 'Grape' %}">Grape</a></li>
+<br>
+
+<h2 class="text-muted">Electronic Product</h2>
+<li><a href="{% url 'detail' 8 1000 'iPhone13' %}">iPhone13</a></li>
+<li><a href="{% url 'detail' 9 1500 'iPad' %}">iPad</a></li>
+<li><a href="{% url 'detail' 10 2000 'iMac' %}">iMac</a></li>
+<li><a href="{% url 'detail' 11 1600 'MacBookPro' %}">MacBookPro</a></li>
+<li><a href="{% url 'detail' 12 500 'Switch' %}">Switch</a></li>
+<li><a href="{% url 'detail' 13 700 'PS5' %}">PS5</a></li>
+<li><a href="{% url 'detail' 14 600 'XBOX' %}">XBOX</a></li>
+
+<br>
+
+{% endblock content %}

@@ -26,12 +26,13 @@ def register(request):
 
 @login_required
 def home(request):
-    list = UserProfile.objects.filter(userName = request.user.username) # create profile in database for every new user
+    # create profile in database for every new user
+    list = UserProfile.objects.filter(userName=request.user.username)
     if list.exists() is not True:
         profile = UserProfile.objects.create()
         profile.userName = request.user.username
         profile.save()
-    
+
     return render(request, 'amazon/home.html')
 
 
@@ -43,22 +44,24 @@ def orderStatus(request):
 
 @login_required
 def editProfile(request):
-    profile = UserProfile.objects.filter(userName=request.user.username).first()
+    profile = UserProfile.objects.filter(
+        userName=request.user.username).first()
     if request.method == "POST":
-        profile_form = UpdateProfileForm(request.POST,instance = profile)
+        profile_form = UpdateProfileForm(request.POST, instance=profile)
         if profile_form.is_valid():  # 获取数据
             getAddrX = profile_form.cleaned_data['addrX']
             getAddrY = profile_form.cleaned_data['addrY']
             getUpsID = profile_form.cleaned_data['upsID']
             # create the ride
-            profile = UserProfile.objects.filter(userName=request.user.username).first()
+            profile = UserProfile.objects.filter(
+                userName=request.user.username).first()
             profile.addrX = getAddrX
             profile.addrY = getAddrY
             profile.upsID = getUpsID
             profile.save()
             return redirect('home')  # 自动跳转回上一层
-    else: # GET
-        profile_form = UpdateProfileForm(instance = profile)
+    else:  # GET
+        profile_form = UpdateProfileForm(instance=profile)
         context = {
             'addrX': profile.addrX,
             'addrY': profile.addrY,
@@ -71,6 +74,45 @@ def editProfile(request):
 @login_required
 def shoppingCart(request):
     return render(request, 'amazon/home.html')
+
+
+@login_required
+def cataLog(request):
+    if request.method == 'GET':
+        return render(request, 'amazon/cataLog.html')
+
+
+@login_required
+def cataLogDetail(request, productID, productPrice, productDescription):
+    context = {
+        'productID': productID,
+        'productPrice': productPrice,
+        'productDescription': productDescription
+    }
+    if request.method == 'GET':
+        return render(request, 'amazon/cataLogDetail.html', context)
+    elif request.method == 'POST':
+        ProductAddrX = request.POST['AddressX']
+        ProductAddrY = request.POST['AddressY']
+        ProductAmt = request.POST['Amount']
+        ProductID = productID
+        ProductPrice = productPrice
+        ProductDescription = productDescription
+        UPsId = request.POST['UPS_ID']
+        # concatenate order information
+        OrderInfo = ProductAddrX + ':' + ProductAddrY + ':' + \
+            str(ProductAmt) + ':' + str(ProductID) + ':' + str(ProductPrice) + \
+            ':' + ProductDescription + ':' + UPsId
+        # For test orderInfo
+        print('OrderInfo is: ' + OrderInfo)
+        # Send the orderInfo to the server, and receive the server's response
+        # if not receive, it will return false, else return true
+        packid = sendOrder(OrderInfo)
+        if packid == -1:
+            return HttpResponse('PlaceOrder Fail')
+        else:
+            # return HttpResponse('The Order Packid is:' + packid)
+            return render(request, 'amazon/placeOrderSuccess.html', {'packid': packid})
 
 
 @login_required

@@ -35,16 +35,18 @@ Server::Server() {
   n_warehouse = 9;  // should be an odd number for symetric
   wh_distance = 20;
   webPortNum = "9999";
-  //worldHostName = "vcm-24822.vm.duke.edu";  // for changhao testing
+  worldHostName = "vcm-24822.vm.duke.edu";  // for changhao testing
   //worldHostName = "vcm-25941.vm.duke.edu"; //for junfeng testing
-  worldHostName = "vcm-24717.vm.duke.edu";  // for real testing
-  worldPortNum = "23456";                   // test in 23456, use 12345
-  upsHostName = "vcm-24717.vm.duke.edu";
+  // worldHostName = "vcm-24717.vm.duke.edu";  // for real testing
+  //worldPortNum = "23456";                   // test in 23456, use 12345
+  worldPortNum = "12345";                   // test in 23456, use 12345
+  //upsHostName = "vcm-24717.vm.duke.edu"; //for real testing
+  upsHostName = "0.0.0.0";
   upsPortNum = "8888";
-  worldID = -1;
+  // worldID = -1; // use in real test
 
-  //used in development
-  //worldID = 3;
+   
+  worldID = 3;  // used in development
 }
 
 /* ------------------------ "server runtime functions" ------------------------ */
@@ -54,7 +56,7 @@ Server::Server() {
 */
 void Server::run() {
   try {
-    getWorldIDFromUPS();
+    //getWorldIDFromUPS(); //for real testing
     initializeWorld();
     thread tI_world(&Server::keepReceivingMsgFromWorld, this);
     thread tI_ups(&Server::keepReceivingMsgFromUps, this);
