@@ -57,12 +57,21 @@ class Inventory(models.Model):
         db_table = 'inventory'
 
 # 启动时创建
+
+
 class UserProfile(models.Model):
-    userName = models.CharField(max_length =50, primary_key=True)
+    userName = models.CharField(max_length=50, primary_key=True)
     addrX = models.CharField(max_length=10, null=True)
     addrY = models.CharField(max_length=10, null=True)
     upsID = models.CharField(max_length=10, null=True)
 
     def get_absolute_url(self):
         return reverse('home')
-    
+
+
+class ShoppingCart(models.Model):
+    ShoppingCartID = models.AutoField(primary_key=True)
+    item_name = models.CharField(max_length=50)
+    item_amount = models.IntegerField()
+    item_id = models.ForeignKey(Item, on_delete=models.CASCADE, null=True)
+    item_price = models.FloatField(max_length=100)
