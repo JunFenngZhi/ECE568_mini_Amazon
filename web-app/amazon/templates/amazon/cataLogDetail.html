@@ -10,27 +10,12 @@
       <h2 class="text-muted">Product price : {{productPrice}}</h2>
       <br>
       
-      <form class='form-cataLogDetail' action="{% url 'detail' productID productPrice productDescription%}" method="post">
+      <form class='form-cataLogDetail' action="{% url 'detail' productID productPrice productDescription productCatalog%}" method="post">
           {% csrf_token %}
           <div class="form-group">
             {{ placeOrderform.amount.label_tag }}
             {{ placeOrderform.amount }}
          </div>
-         <br />
-          <div class="form-group">
-              {{ placeOrderform.addrX.label_tag }}
-              {{ placeOrderform.addrX }}
-          </div>
-          <br />
-          <div class="form-group">
-            {{ placeOrderform.addrY.label_tag }}
-            {{ placeOrderform.addrY }}
-          </div>
-          <br />
-          <div class="form-group">
-            {{ placeOrderform.upsID.label_tag }}
-            {{ placeOrderform.upsID}}
-          </div>
           <br />
           <button type="reset" class="btn btn-primary pull-left">reset</button>
           <button type="submit" class="btn btn-primary pull-right">add to shopping cart</button>
