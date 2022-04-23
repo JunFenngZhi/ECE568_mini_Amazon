@@ -29,7 +29,7 @@ class UpdateProfileForm(forms.ModelForm):
         fields = ['addrX','addrY','upsID']
         
 class placeOrderForm(forms.ModelForm):
-    amount = forms.IntegerField(label="purchase amount:")
+    amount = forms.IntegerField(label="purchase amount:", min_value = 1)
     addrX = forms.CharField(max_length=10, label="deleivery address X:")   
     addrY = forms.CharField(max_length=10, label="deleivery address X:") 
     upsID = forms.CharField(max_length=10, required=False, label="UPS_ID(optional):") 

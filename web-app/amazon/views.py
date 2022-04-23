@@ -88,10 +88,16 @@ def cataLogDetail(request, productID, productPrice, productDescription):
         context = {
             'productPrice': productPrice,
             'productName' : productDescription,
-            'placeOrderform': form
+            'placeOrderform': form,
+            'productDescription': productDescription,
+            'productID' : productID
         }
         return render(request, 'amazon/cataLogDetail.html', context)
     else: # POST
+        
+
+    
+
 
     
     
@@ -99,8 +105,6 @@ def cataLogDetail(request, productID, productPrice, productDescription):
     
 
         
-
-
 @login_required
 def placeOrder(request):
 
