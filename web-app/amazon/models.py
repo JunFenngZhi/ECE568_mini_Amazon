@@ -2,6 +2,7 @@ from enum import unique
 from gettext import Catalog
 from django.db import models
 from django.utils.timezone import now
+from django.urls.base import reverse
 
 # Create your models here.
 
@@ -55,3 +56,14 @@ class Inventory(models.Model):
     class Meta:
         unique_together = ["item", "wh_id"]
         db_table = 'inventory'
+
+# 启动时创建
+class UserProfile(models.Model):
+    userName = models.CharField(max_length =50, primary_key=True)
+    addrX = models.CharField(max_length=10, null=True)
+    addrY = models.CharField(max_length=10, null=True)
+    upsID = models.CharField(max_length=10, null=True)
+
+    def get_absolute_url(self):
+        return reverse('home')
+    
