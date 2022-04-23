@@ -5,7 +5,7 @@ from amazon.utils import *
 from django.contrib import messages
 from .forms import UserRegisterForm, UpdateProfileForm, placeOrderForm
 from django.contrib.auth.decorators import login_required
-from .models import UserProfile
+from .models import Item, UserProfile
 
 
 def register(request):
@@ -81,7 +81,7 @@ def cataLog(request):
 
 
 @login_required
-def cataLogDetail(request, productID, productPrice, productDescription):
+def cataLogDetail(request, productID, productPrice, productDescription, productCatalog):
     profile = UserProfile.objects.filter(userName=request.user.username).first()
     if request.method == 'GET':
         form = placeOrderForm(instance=profile)
@@ -90,11 +90,30 @@ def cataLogDetail(request, productID, productPrice, productDescription):
             'productName' : productDescription,
             'placeOrderform': form,
             'productDescription': productDescription,
-            'productID' : productID
+            'productID' : productID,
+            'productCatalog': productCatalog
         }
         return render(request, 'amazon/cataLogDetail.html', context)
     else: # POST
+        # add item to Item Table if not exist
+        list = Item.objects.filter(item_id=productID)
+        if list.exists() is not True:
+            item = Item.objects.create()
+            item.item_id = productID
+            item.name = productDescription
+            item.description = productDescription
+            item.price = productPrice
+            item.catalog = productCatalog
+            item.save()
+        form = placeOrderForm(instance=profile)
+        if form.is_valid():
+            amount = form.amount
+            # TODO：create object to shopping cart
         
+
+
+
+
 
     
 

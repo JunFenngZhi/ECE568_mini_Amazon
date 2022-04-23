@@ -29,7 +29,7 @@ urlpatterns = [
     path('cataLog/', views.cataLog, name='cataLog'),
 
     # product detail
-    path('cataLog/detail/<int:productID>/<int:productPrice>/<str:productDescription>/',
+    path('cataLog/detail/<int:productID>/<int:productPrice>/<str:productDescription>/<str:productCatalog>',
          views.cataLogDetail, name='detail'),
 
 ]
