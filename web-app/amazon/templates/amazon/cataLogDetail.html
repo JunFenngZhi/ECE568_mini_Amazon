@@ -1,28 +1,37 @@
 {% extends "amazon/base.html" %}
 {% block content %}
 
+
 <div class="container">
     <div class="col-md-4 col-md-offset-4">
 
-      <h2 class="text-muted">The productId is {{productID}} , the description is {{productDescription}} and the productPrice is {{productPrice}}</h2>
+      <h2 class="text-muted">Current username is {{user.username}}</h2>
       <br>
-      <h3 class="text-muted">Please enter the amount, addressX, addressY, UPSID(Optional) to Place the Order</h3>
-      <form action="{% url 'detail' productID productPrice productDescription %}" method="post">
+      
+      <form class='form-cataLogDetail' action="{% url 'cataLogDetail' %}" method="post">
           {% csrf_token %}
-          <p>
-            Product Address X : <input type="text" name="AddressX">
-            </p>
-          <p>
-            Product Address Y : <input type="text" name="AddressY">
-          </p>
-
-          <p>
-            Product Amount: <input type="text" name="Amount">
-          </p>
-            <p>
-            UPS ID(OPTIONAL): <input type="text" name="UPS_ID">
-            </p>
-          <button type="submit" class="btn btn-primary pull-right">Place the order</button>    
+          <div class="form-group">
+            {{ placeOrderform.amount.label_tag }}
+            {{ placeOrderform.amount }}
+         </div>
+          <div class="form-group">
+              {{ placeOrderform.addrX.label_tag }}
+              {{ placeOrderform.addrX }}
+          </div>
+          <br />
+          <div class="form-group">
+            {{ placeOrderform.addrY.label_tag }}
+            {{ placeOrderform.addrY }}
+          </div>
+          <br />
+          <div class="form-group">
+            {{ placeOrderform.upsID.label_tag }}
+            {{ placeOrderform.upsID}}
+          </div>
+          <br />
+          <button type="reset" class="btn btn-primary pull-left">reset</button>
+          <button type="submit" class="btn btn-primary pull-right">submit</button>
+         
       </form>
       
       <br />
@@ -34,6 +43,8 @@
 </div> <!-- /container -->
 
 
+</body>
 
 
 {% endblock content %}
+

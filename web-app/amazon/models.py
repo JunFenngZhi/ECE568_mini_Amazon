@@ -14,8 +14,6 @@ class Item(models.Model):
         max_length=100, null=True, unique=True)
     price = models.FloatField(max_length=1000, blank=False, null=False)
     catalog = models.CharField(max_length=100, null=True)
-    seller = models.CharField(max_length=100, null=True)
-    version = models.IntegerField()  # need default value.
 
     class Meta:
         db_table = 'item'
@@ -23,6 +21,7 @@ class Item(models.Model):
 
 class Order(models.Model):
     pack_id = models.AutoField(primary_key=True)
+    customer_name = models.CharField(max_length=50)
     addr_x = models.IntegerField()
     addr_y = models.IntegerField()
     time = models.TimeField()

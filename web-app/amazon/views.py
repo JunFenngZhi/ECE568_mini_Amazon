@@ -1,11 +1,9 @@
 from curses.ascii import HT
-from multiprocessing import context
-import profile
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from amazon.utils import *
 from django.contrib import messages
-from .forms import UserRegisterForm, UpdateProfileForm
+from .forms import UserRegisterForm, UpdateProfileForm, placeOrderForm
 from django.contrib.auth.decorators import login_required
 from .models import UserProfile
 
@@ -84,35 +82,23 @@ def cataLog(request):
 
 @login_required
 def cataLogDetail(request, productID, productPrice, productDescription):
-    context = {
-        'productID': productID,
-        'productPrice': productPrice,
-        'productDescription': productDescription
-    }
+    profile = UserProfile.objects.filter(userName=request.user.username).first()
     if request.method == 'GET':
+        form = placeOrderForm(instance=profile)
+        context = {
+            'productPrice': productPrice,
+            'productName' : productDescription,
+            'placeOrderform': form
+        }
         return render(request, 'amazon/cataLogDetail.html', context)
-    elif request.method == 'POST':
-        ProductAddrX = request.POST['AddressX']
-        ProductAddrY = request.POST['AddressY']
-        ProductAmt = request.POST['Amount']
-        ProductID = productID
-        ProductPrice = productPrice
-        ProductDescription = productDescription
-        UPsId = request.POST['UPS_ID']
-        # concatenate order information
-        OrderInfo = ProductAddrX + ':' + ProductAddrY + ':' + \
-            str(ProductAmt) + ':' + str(ProductID) + ':' + str(ProductPrice) + \
-            ':' + ProductDescription + ':' + UPsId
-        # For test orderInfo
-        print('OrderInfo is: ' + OrderInfo)
-        # Send the orderInfo to the server, and receive the server's response
-        # if not receive, it will return false, else return true
-        packid = sendOrder(OrderInfo)
-        if packid == -1:
-            return HttpResponse('PlaceOrder Fail')
-        else:
-            # return HttpResponse('The Order Packid is:' + packid)
-            return render(request, 'amazon/placeOrderSuccess.html', {'packid': packid})
+    else: # POST
+
+    
+    
+    
+    
+
+        
 
 
 @login_required

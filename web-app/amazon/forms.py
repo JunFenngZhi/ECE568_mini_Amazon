@@ -27,4 +27,14 @@ class UpdateProfileForm(forms.ModelForm):
     class Meta:
         model = UserProfile
         fields = ['addrX','addrY','upsID']
+        
+class placeOrderForm(forms.ModelForm):
+    amount = forms.IntegerField(label="purchase amount:")
+    addrX = forms.CharField(max_length=10, label="deleivery address X:")   
+    addrY = forms.CharField(max_length=10, label="deleivery address X:") 
+    upsID = forms.CharField(max_length=10, required=False, label="UPS_ID(optional):") 
+
+    class Meta:
+        model = UserProfile
+        fields = ['addrX','addrY','upsID']
 
