@@ -33,15 +33,15 @@ void parseOrder(string msg, int client_fd) {
   vector<Warehouse> whList = server->getWhList();
   int whIndex = selectWareHouse(whList, order);
   order.setWhID(whList[whIndex].getID());
-  order.showOrder();
-
+  
   // save order in DB
   unique_ptr<connection> C(Server::connectDB("mini_amazon", "postgres", "passw0rd"));
   saveOrderInDB(C.get(), order);
   Server::disConnectDB(C.get());
+  order.showOrder();
 
   // send back ack info to front-end
-  string ackResponse = "ACk package_id:" + to_string(order.getPackId());
+  string ackResponse = "ACK";
   sendMsg(client_fd, ackResponse.c_str(), ackResponse.length());
   close(client_fd);
 

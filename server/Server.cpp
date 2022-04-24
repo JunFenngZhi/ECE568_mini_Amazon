@@ -36,8 +36,8 @@ Server::Server() {
   wh_distance = 20;
   webPortNum = "9999";
   worldHostName = "vcm-24822.vm.duke.edu";  // for changhao testing
-  //worldHostName = "vcm-25941.vm.duke.edu"; //for junfeng testing
-  // worldHostName = "vcm-24717.vm.duke.edu";  // for real testing
+  //worldHostName = "vcm-25941.vm.duke.edu";   //for junfeng testing
+  //worldHostName = "vcm-24717.vm.duke.edu";  // for fuzhengqi testing
   //worldPortNum = "23456";                   // test in 23456, use 12345
   worldPortNum = "12345";                   // test in 23456, use 12345
   //upsHostName = "vcm-24717.vm.duke.edu"; //for real testing

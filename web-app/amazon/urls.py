@@ -23,7 +23,7 @@ urlpatterns = [
     path('shoppingCart/', views.shoppingCart, name='shoppingCart'),
 
     # place Order
-    path('placeOrder/', views.placeOrder, name='placeOrder'),
+    path('placeOrders/', views.placeOrders, name='placeOrders'),
 
     # product cataLog
     path('cataLog/', views.cataLog, name='cataLog'),
@@ -31,5 +31,14 @@ urlpatterns = [
     # product detail
     path('cataLog/detail/<int:productID>/<int:productPrice>/<str:productDescription>/<str:productCatalog>',
          views.cataLogDetail, name='detail'),
+    
+    # remove order from shopping cart
+    path('removeFromShoppingCart/<int:id>', views.removeFromShoppingCart, name='removeFromShoppingCart'),
 
+    # seccessfully send order to server
+    path('success', views.success, name='success'),
+
+    # fail to place order
+    path('fail', views.fail, name='fail')
+    
 ]

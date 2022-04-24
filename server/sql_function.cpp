@@ -45,7 +45,7 @@ void setTableDefaultValue(connection * C) {
   work W(*C);
   string sql = "ALTER TABLE orders ALTER COLUMN version SET DEFAULT 1;ALTER TABLE "
                "inventory ALTER COLUMN version SET DEFAULT 1;"
-               "ALTER TABLE item ALTER COLUMN version SET DEFAULT 1;ALTER TABLE orders "
+               "ALTER TABLE orders "
                "ALTER COLUMN time SET DEFAULT CURRENT_TIME (0);"
                "ALTER TABLE orders ALTER COLUMN status set DEFAULT 'packing';";
   W.exec(sql);
@@ -93,32 +93,9 @@ bool checkInventory(connection * C, int itemId, int itemAmount, int whID, int & 
 }
 
 /*
-   save item into the database, if it already exists do nothing, else insert .
-*/
-void saveItemInDB(connection * C, const Order & order) {
-  //first we need to check if there exists this item in table
-  work W(*C);
-  int itemid = order.getItemId();
-  float item_price = order.getPrice();
-  string item_description = order.getDescription();
-
-  // create sql statement, we need to select item amount from inventory table
-  stringstream sql;
-  sql << "INSERT INTO ITEM (ITEM_ID, DESCRIPTION, PRICE) "
-         "VALUES("
-      << itemid << ", " << W.quote(item_description) << ", " << item_price << ")"
-      << " ON CONFLICT (ITEM_ID) DO NOTHING;";
-  W.exec(sql.str());
-  W.commit();
-}
-
-/*
    save order into the database,and set package into order member through reference.
 */
 void saveOrderInDB(connection * C, Order & order) {
-  //we need to save item in item table if it not exist
-  saveItemInDB(C, order);
-
   //finally we need to save order in the order table
   work W(*C);
   stringstream sql;
@@ -129,12 +106,12 @@ void saveOrderInDB(connection * C, Order & order) {
   int itemid = order.getItemId();
   int whid = order.getWhID();
   float item_price = order.getPrice();
-  string customername = order.getDescription();
+  string customername = order.getCustomerName();
   float total_price = item_price * amount;
-  sql << "INSERT INTO ORDERS (ADDR_X, ADDR_Y, AMOUNT, UPS_ID, ITEM_ID, PRICE, WH_ID, CUSTOMER_NAME) "
-         "VALUES("
+  sql << "INSERT INTO ORDERS (CUSTOMER_NAME, ADDR_X, ADDR_Y, AMOUNT, UPS_ID, ITEM_ID, PRICE, WH_ID) "
+         "VALUES(" << W.quote(customername) << ", "
       << addrx << ", " << addry << ", " << amount << ", " << upsid << ", " << itemid
-      << ", " << total_price << ", " << whid << ", " << W.quote(customername) << ");SELECT currval('orders_pack_id_seq');";
+      << ", " << total_price << ", " << whid <<  ");SELECT currval('orders_pack_id_seq');";
   result orderRes = W.exec(sql.str());
   int packageId = orderRes[0][0].as<int>();
   order.setPackId(packageId);

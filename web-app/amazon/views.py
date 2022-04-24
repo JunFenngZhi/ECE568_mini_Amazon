@@ -1,11 +1,9 @@
-from curses.ascii import HT
-from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from amazon.utils import *
 from django.contrib import messages
-from .forms import UserRegisterForm, UpdateProfileForm, placeOrderForm
+from .forms import UserRegisterForm, UpdateProfileForm, addShoppingCartForm
 from django.contrib.auth.decorators import login_required
-from .models import Item, UserProfile
+from .models import Item, UserProfile, ShoppingCart
 
 
 def register(request):
@@ -61,9 +59,6 @@ def editProfile(request):
     else:  # GET
         profile_form = UpdateProfileForm(instance=profile)
         context = {
-            'addrX': profile.addrX,
-            'addrY': profile.addrY,
-            'upsID': profile.upsID,
             'profile_form': profile_form
         }
         return render(request, 'amazon/editProfile.html', context)
@@ -71,7 +66,13 @@ def editProfile(request):
 
 @login_required
 def shoppingCart(request):
-    return render(request, 'amazon/home.html')
+     # get all item in shopping cart for current user
+    item_list = ShoppingCart.objects.filter(userName = request.user.username)
+    context = {
+        'item_list': item_list,
+    }
+
+    return render(request, 'amazon/shoppingCart.html', context=context)
 
 
 @login_required
@@ -82,75 +83,77 @@ def cataLog(request):
 
 @login_required
 def cataLogDetail(request, productID, productPrice, productDescription, productCatalog):
-    profile = UserProfile.objects.filter(userName=request.user.username).first()
+    profile = UserProfile.objects.filter(
+        userName=request.user.username).first()
     if request.method == 'GET':
-        form = placeOrderForm(instance=profile)
+        form = addShoppingCartForm(instance=profile)
         context = {
             'productPrice': productPrice,
-            'productName' : productDescription,
+            'productName': productDescription,
             'placeOrderform': form,
             'productDescription': productDescription,
-            'productID' : productID,
+            'productID': productID,
             'productCatalog': productCatalog
         }
         return render(request, 'amazon/cataLogDetail.html', context)
-    else: # POST
+    else:  # POST
         # add item to Item Table if not exist
         list = Item.objects.filter(item_id=productID)
         if list.exists() is not True:
-            item = Item.objects.create()
-            item.item_id = productID
-            item.name = productDescription
+            item = Item.objects.create(
+                item_id=productID, name=productDescription, price=productPrice, catalog=productCatalog)
             item.description = productDescription
-            item.price = productPrice
-            item.catalog = productCatalog
             item.save()
-        form = placeOrderForm(instance=profile)
+        # add record to shopping cart
+        form = addShoppingCartForm(request.POST, instance=profile)
         if form.is_valid():
-            amount = form.amount
-            # TODO：create object to shopping cart
-        
+            order = ShoppingCart.objects.create(amount=form.cleaned_data['amount'], itemID=productID, item_price=productPrice)
+            order.name = productDescription
+            order.userName = request.user.username
+            order.save()
+        return redirect('cataLog')  # 自动跳转回上一层
 
 
-
-
-
-    
-
-
-    
-    
-    
-    
-
-        
 @login_required
-def placeOrder(request):
+def removeFromShoppingCart(request, id):
+    ShoppingCart.objects.filter(ShoppingCartID=id).first().delete()
+    return redirect('shoppingCart')
 
+
+@login_required
+def placeOrders(request):
+    profile = UserProfile.objects.filter(userName=request.user.username).first()
     if request.method == 'GET':
-        # GET request return index page
-        return render(request, 'amazon/placeOrder.html')
+        profile_form = UpdateProfileForm(instance=profile)
+        context = {
+            'profile_form': profile_form
+        }
+        return render(request, 'amazon/placeOrders.html',context)
+    else:
+        profile_form = UpdateProfileForm(request.POST, instance=profile)
+        if profile_form.is_valid():  # 获取数据
+            getAddrX = profile_form.cleaned_data['addrX']
+            getAddrY = profile_form.cleaned_data['addrY']
+            getUpsID = profile_form.cleaned_data['upsID']
+            
+            orderLists = ShoppingCart.objects.filter(userName = request.user.username)
+            if orderLists.count() == 0:
+                return redirect('fail')
 
-    elif request.method == 'POST':
-        ProductAddrX = request.POST['AddressX']
-        ProductAddrY = request.POST['AddressY']
-        ProductAmt = request.POST['Amount']
-        ProductID = request.POST['ID']
-        ProductPrice = request.POST['Price']
-        ProductDescription = request.POST['Description']
-        UPsId = request.POST['UPS_ID']
+            sendOrder(getAddrX,getAddrY,getUpsID, orderLists) # send orders to server
 
-        # concatenate order information
-        OrderInfo = ProductAddrX + ':' + ProductAddrY + ':' + \
-            ProductAmt + ':' + ProductID + ':' + ProductPrice + \
-            ':' + ProductDescription + ':' + UPsId
-        # For test orderInfo
-        print('OrderInfo is: ' + OrderInfo)
+            # clean up the shopping cart
+            for order in orderLists.all():
+                order.delete()
 
-        # Send the orderInfo to the server, and receive the server's response
-        # if not receive, it will return false, else return true
-        packid = sendOrder(OrderInfo)
-        if packid == -1:
-            return HttpResponse('PlaceOrder Fail')
-        else:
-            return HttpResponse('The Order Packid is:' + packid)
+            return redirect('success')  # 自动跳转回上一层
+
+
+@login_required
+def success(request):
+    return render(request, 'amazon/placeOrderSuccess.html')
+
+@login_required
+def fail(request):
+    return render(request, 'amazon/placeOrderFail.html')
+              

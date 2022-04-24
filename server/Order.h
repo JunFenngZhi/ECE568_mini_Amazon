@@ -39,11 +39,11 @@ class Order {
     }
     //Because the UPSID is optional, we need to judge if the UPSID is exists
     //if not exists, we set UPS_ID as -1 to indicate that
-    if (res[6] == "") {
+    if (res[7] == "") {
       UPS_ID = -1;
     }
     else {
-      UPS_ID = stoi(res[6]);
+      UPS_ID = stoi(res[7]);
     }
     address_x = stoi(res[0]);
     address_y = stoi(res[1]);
