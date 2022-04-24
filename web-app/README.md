@@ -14,3 +14,9 @@ Then Django framework will generate migration file and create database and relat
 1. run initserver.sh
 2. run runserver.sh
 
+## If you want to clean the database in mini_amazon for each testing, follwing steps below:
+1. `psql -U postgres mini_amazon` password is `passw0rd`
+2. run `truncate item cascade;`
+3. run `truncate shoppingcart;`
+4. run `alter sequence orders_pack_id_seq restart with 1;`
+

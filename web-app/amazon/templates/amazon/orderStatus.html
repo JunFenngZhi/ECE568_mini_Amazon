@@ -1,12 +1,7 @@
-{% extends "rideSharing/base.html" %}
+{% extends "amazon/base.html" %}
 {% block content %}
 
 <div class="container">
-    <br>
-    <p>
-        All your orders are shown below
-    </p>
-    <br>
 
     <div class="accordion" id="accordionPanelsStayOpenExample">
         <div class="accordion-item">
@@ -14,7 +9,7 @@
                 <button class="accordion-button" type="button" data-bs-toggle="collapse"
                     data-bs-target="#panelsStayOpen-collapseOne" aria-expanded="true"
                     aria-controls="panelsStayOpen-collapseOne">
-                    Confirmed orders:
+                    All your confirmed orders:
                 </button>
             </h2>
             <div id="panelsStayOpen-collapseOne" class="accordion-collapse collapse show"
@@ -29,10 +24,10 @@
                                 <th>Order ID</th>
                                 <th>Item Name</th>
                                 <th>Amount</th>
-                                <th>Address X</th>
-                                <th>Address Y</th>
-                                <th>Warehouse</th>
-                                <th>Price</th>
+                                <th>Delivery Address X</th>
+                                <th>Delivery Address Y</th>
+                                <th>Warehouse ID</th>
+                                <th>Total Price</th>
                                 <th>UPS ID</th>
                                 <th>Create time</th>
                                 <th>Status</th>
@@ -40,10 +35,19 @@
                         </thead>
 
                         <tbody>
-                            {% for ride in conformed_list %}
+                            {% for order in order_list %}
                             <tr>
                                 <!-- td表示每一行里面的元素 -->
-                                <td>{{ TODO }}</td>
+                                <td>{{ order.pack_id}}</td>
+                                <td>{{ order.item.name}}</td>
+                                <td>{{ order.amount}}</td>
+                                <td>{{ order.addr_x}}</td>
+                                <td>{{ order.addr_y}}</td>
+                                <td>{{ order.wh_id}}</td>
+                                <td>{{ order.price}}</td>
+                                <td>{{ order.ups_id}}</td>
+                                <td>{{ order.time}}</td>
+                                <td>{{ order.status}}</td>
                             </tr>
                             {% endfor %}
                         </tbody>

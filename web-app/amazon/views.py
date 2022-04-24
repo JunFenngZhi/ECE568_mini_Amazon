@@ -3,7 +3,7 @@ from amazon.utils import *
 from django.contrib import messages
 from .forms import UserRegisterForm, UpdateProfileForm, addShoppingCartForm
 from django.contrib.auth.decorators import login_required
-from .models import Item, UserProfile, ShoppingCart
+from .models import Item, UserProfile, ShoppingCart, Order
 
 
 def register(request):
@@ -34,8 +34,11 @@ def home(request):
 
 @login_required
 def orderStatus(request):
-    # TODO
-    return render(request, 'amazon/orderStatus.html')
+    order_list = Order.objects.filter(customer_name=request.user.username)
+    context = {
+        'order_list':order_list,
+    }
+    return render(request, 'amazon/orderStatus.html', context)
 
 
 @login_required
@@ -66,8 +69,8 @@ def editProfile(request):
 
 @login_required
 def shoppingCart(request):
-     # get all item in shopping cart for current user
-    item_list = ShoppingCart.objects.filter(userName = request.user.username)
+    # get all item in shopping cart for current user
+    item_list = ShoppingCart.objects.filter(userName=request.user.username)
     context = {
         'item_list': item_list,
     }
@@ -107,7 +110,8 @@ def cataLogDetail(request, productID, productPrice, productDescription, productC
         # add record to shopping cart
         form = addShoppingCartForm(request.POST, instance=profile)
         if form.is_valid():
-            order = ShoppingCart.objects.create(amount=form.cleaned_data['amount'], itemID=productID, item_price=productPrice)
+            order = ShoppingCart.objects.create(
+                amount=form.cleaned_data['amount'], itemID=productID, item_price=productPrice)
             order.name = productDescription
             order.userName = request.user.username
             order.save()
@@ -122,25 +126,28 @@ def removeFromShoppingCart(request, id):
 
 @login_required
 def placeOrders(request):
-    profile = UserProfile.objects.filter(userName=request.user.username).first()
+    profile = UserProfile.objects.filter(
+        userName=request.user.username).first()
     if request.method == 'GET':
         profile_form = UpdateProfileForm(instance=profile)
         context = {
             'profile_form': profile_form
         }
-        return render(request, 'amazon/placeOrders.html',context)
+        return render(request, 'amazon/placeOrders.html', context)
     else:
         profile_form = UpdateProfileForm(request.POST, instance=profile)
         if profile_form.is_valid():  # 获取数据
             getAddrX = profile_form.cleaned_data['addrX']
             getAddrY = profile_form.cleaned_data['addrY']
             getUpsID = profile_form.cleaned_data['upsID']
-            
-            orderLists = ShoppingCart.objects.filter(userName = request.user.username)
+
+            orderLists = ShoppingCart.objects.filter(
+                userName=request.user.username)
             if orderLists.count() == 0:
                 return redirect('fail')
 
-            sendOrder(getAddrX,getAddrY,getUpsID, orderLists) # send orders to server
+            sendOrder(getAddrX, getAddrY, getUpsID,
+                      orderLists)  # send orders to server
 
             # clean up the shopping cart
             for order in orderLists.all():
@@ -153,7 +160,7 @@ def placeOrders(request):
 def success(request):
     return render(request, 'amazon/placeOrderSuccess.html')
 
+
 @login_required
 def fail(request):
     return render(request, 'amazon/placeOrderFail.html')
-              
