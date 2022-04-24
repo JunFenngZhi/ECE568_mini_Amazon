@@ -53,7 +53,7 @@ Server::Server() {
 */
 void Server::run() {
   try {
-    //getWorldIDFromUPS();  //for real testing
+    getWorldIDFromUPS();  //for real testing
     initializeWorld();
     thread tI_world(&Server::keepReceivingMsgFromWorld, this);
     thread tI_ups(&Server::keepReceivingMsgFromUps, this);

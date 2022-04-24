@@ -15,8 +15,9 @@ def sendOrder(getAddrX, getAddrY, getUpsID, orderLists):
         print('orderInfo is: ' + orderInfo)
         print(orderInfo.encode())
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        client.connect(('vcm-24822.vm.duke.edu', 9999))  # for changhao testing
-        # client.connect(('vcm-24026.vm.duke.edu', 9999)) #for junfeng testing
+        # connect to your server container
+        # client.connect(('vcm-24822.vm.duke.edu', 9999))  # for changhao testing
+        client.connect(('vcm-25941.vm.duke.edu', 9999)) #for junfeng testing
         print('connect to server success!')
         try:
             client.send(orderInfo.encode('utf-8'))
