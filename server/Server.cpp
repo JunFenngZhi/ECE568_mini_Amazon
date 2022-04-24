@@ -35,10 +35,10 @@ Server::Server() {
   n_warehouse = 9;  // should be an odd number for symetric
   wh_distance = 20;
   webPortNum = "9999";
-  worldHostName = "vcm-24822.vm.duke.edu";  // for changhao testing
+  worldHostName = "vcm-26124.vm.duke.edu";  // for changhao testing
   //worldHostName = "vcm-25941.vm.duke.edu";   //for junfeng testing
   //worldHostName = "vcm-24717.vm.duke.edu";  // for fuzhengqi testing
-  worldPortNum = "23456";    
+  worldPortNum = "23456";
 
   //upsHostName = "vcm-24717.vm.duke.edu"; //for fuzhengqi testing
   upsPortNum = "8888";
@@ -53,7 +53,7 @@ Server::Server() {
 */
 void Server::run() {
   try {
-    //getWorldIDFromUPS(); //for real testing
+    //getWorldIDFromUPS();  //for real testing
     initializeWorld();
     thread tI_world(&Server::keepReceivingMsgFromWorld, this);
     thread tI_ups(&Server::keepReceivingMsgFromUps, this);
