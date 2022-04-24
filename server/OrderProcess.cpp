@@ -185,7 +185,7 @@ void callATruck(Order order) {
   aOrderTruck->set_seqnum(seqNum);
 
   pushUpsQueue(aucommand, seqNum);
-  cout<<"already send AOrderATruck command to world.\n"; 
+  cout<<"already send AOrderATruck command to UPS.\n"; 
 }
 
 /* ------------------------ "Message Queue push functions" ------------------------ */
