@@ -15,7 +15,6 @@ def sendOrder(getAddrX, getAddrY, getUpsID, orderLists):
         print('orderInfo is: ' + orderInfo)
         print(orderInfo.encode())
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        # client.connect(('0.0.0.0'), 8000)
         client.connect(('vcm-26124.vm.duke.edu', 9999))  # for changhao testing
         # client.connect(('vcm-24026.vm.duke.edu', 9999)) #for junfeng testing
         print('connect to server success!')

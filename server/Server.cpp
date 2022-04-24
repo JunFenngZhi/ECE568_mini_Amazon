@@ -38,13 +38,12 @@ Server::Server() {
   worldHostName = "vcm-24822.vm.duke.edu";  // for changhao testing
   //worldHostName = "vcm-25941.vm.duke.edu";   //for junfeng testing
   //worldHostName = "vcm-24717.vm.duke.edu";  // for fuzhengqi testing
+  worldPortNum = "23456";    
 
-  worldPortNum = "12345";                  
   //upsHostName = "vcm-24717.vm.duke.edu"; //for fuzhengqi testing
-  upsHostName = "0.0.0.0";
   upsPortNum = "8888";
 
-  worldID = 3;  // randomly set one, it will get real world id from ups
+  worldID = -1;  // set to -1 in testing
 }
 
 /* ------------------------ "server runtime functions" ------------------------ */
