@@ -1,8 +1,8 @@
 ## Run in docker, follwing the steps below:
 1. remove mini_Amazon/web-app/amazon/migrations directory.
-2. make sure change database settings in mini_Amazon/web-app/ERSSHW5/settings.py
+2. make sure to change database settings in mini_Amazon/web-app/ERSSHW5/settings.py
 ![image](https://user-images.githubusercontent.com/59811560/164951835-cd349241-9898-49b5-8b06-65241f3e2b93.png)
-3.  make sure use correct statment in Server::connnectDB(), which is located at server.cpp. ![image](https://user-images.githubusercontent.com/59811560/164951866-9e78eeb9-35ea-4a66-85d8-12697e95588c.png)
+3.  make sure to use correct statment in Server::connnectDB(), which is located at server.cpp. ![image](https://user-images.githubusercontent.com/59811560/164951866-9e78eeb9-35ea-4a66-85d8-12697e95588c.png)
 
 4.  change world and ups hostname in the constructor of class Server, which is loacted at server.cpp.  ![image](https://user-images.githubusercontent.com/59811560/164951942-4941ee4f-beb2-4b2d-b69e-b84c4f748dba.png)
 
