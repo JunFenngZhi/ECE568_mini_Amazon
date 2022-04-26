@@ -176,7 +176,7 @@ void callATruck(Order order) {
   aOrderTruck->set_destinationy(dest_y);
   if (order.getUPSId() != -1) {
     //why string upsid?
-    string upsidString(to_string(order.getWhID()));
+    string upsidString(to_string(order.getUPSId()));
     aOrderTruck->set_upsid(upsidString);
   }
 
